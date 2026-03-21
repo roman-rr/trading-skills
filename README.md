@@ -11,13 +11,13 @@ Production-grade signal API powered by advanced AI models. Automated verificatio
 ### Claude Code Plugin (recommended)
 
 ```bash
-/plugin install roman-rr/trading-signals
+/plugin install roman-rr/trading-skills
 ```
 
 ### npx (Claude Code, Codex, Cursor, Windsurf, etc.)
 
 ```bash
-npx skills add roman-rr/trading-signals
+npx skills add roman-rr/trading-skills
 ```
 
 ### OpenAI Codex CLI
@@ -28,11 +28,11 @@ See [agents/openai.yaml](trading-signals/agents/openai.yaml) for agent configura
 
 ```bash
 # Claude Code
-git clone https://github.com/roman-rr/trading-signals.git
-cp -r trading-signals/trading-signals ~/.claude/skills/trading-signals
+git clone https://github.com/roman-rr/trading-skills.git
+cp -r trading-skills/trading-signals ~/.claude/skills/trading-signals
 
 # OpenAI Codex CLI
-cp -r trading-signals/trading-signals ~/.codex/skills/trading-signals
+cp -r trading-skills/trading-signals ~/.codex/skills/trading-signals
 ```
 
 ## Example Prompts
