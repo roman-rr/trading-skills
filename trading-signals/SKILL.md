@@ -1,12 +1,6 @@
 ---
 name: trading-signals
-description: "Live AI crypto trading signals API — get real-time bullish/bearish signals with entry price, stop-loss, take-profit, leverage, risk/reward ratio, and verification tracking. Powered by multi-model MoE consensus and 15+ real-time market data dimensions. Covers BTC, ETH, SOL, and 20+ altcoins. Use when: building trading bots, portfolio trackers, risk dashboards, market analysis tools, or any crypto trading workflow. Triggers: trading signals, crypto signals, bitcoin signals, ethereum signals, buy signal, sell signal, long short, entry price, stop loss, take profit, leverage, trading api, market signals, crypto api, futures signals, perpetuals, technical analysis, momentum, funding rate, whale activity, liquidation"
-license: Complete terms in LICENSE.txt
-compatibility: Requires curl or any HTTP client (Python requests, Node fetch, etc). No CLI install needed.
-metadata:
-  author: roman-rr
-  version: "1.0.0"
-allowed-tools: Bash(curl:*) Read
+description: "Fetches live AI crypto trading signals with entry price, stop-loss, take-profit, leverage, confidence scores, and automated verification. Covers 50+ coins including BTC, ETH, SOL. Use when the user asks for crypto signals, trade ideas, market direction, portfolio analysis, or wants to build a trading bot."
 ---
 
 # Trading Signals — AI Crypto Trading Signals
@@ -130,11 +124,12 @@ curl "https://aelita.x70.ai/api/skill/signals?status=active&limit=10" \
   -H "X-Api-Key: ask_YOUR_KEY"
 ```
 
-| Param | Default | Options |
-|-------|---------|---------|
-| status | `all` | `active` (live setups), `verified` (resolved), `all` |
-| limit | 20 | 1-50 |
-| days | 7 | 1-30 |
+| Param | Default | Description |
+|-------|---------|-------------|
+| limit | 20 | Max signals to return (1-50) |
+| days | 7 | Lookback window (1-30 days) |
+
+Returns only live signals (unverified + pending). Resolved signals are not included.
 
 ### GET /signals/:id
 
