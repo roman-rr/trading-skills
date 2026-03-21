@@ -1,0 +1,12 @@
+.DS_Store
+*.log
+.env
+.env.*
+dist/
+node_modules/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+CLAUDE.md

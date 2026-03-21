@@ -1,0 +1,19 @@
+{
+  "name": "trading-signals",
+  "version": "1.0.0",
+  "description": "Live AI crypto trading signals — entry, SL, TP, leverage, confidence, verification with P&L tracking. Free during beta.",
+  "author": {
+    "name": "roman-rr",
+    "email": "romwtb@gmail.com"
+  },
+  "homepage": "https://aelita.x70.ai",
+  "repository": "https://github.com/roman-rr/trading-signals",
+  "license": "Proprietary",
+  "keywords": [
+    "trading", "crypto", "signals", "bitcoin", "ethereum", "api",
+    "trading-signals", "crypto-signals", "ai-trading", "leverage",
+    "stop-loss", "take-profit", "technical-analysis", "market-data",
+    "bullish", "bearish", "portfolio", "defi", "futures", "perpetuals"
+  ],
+  "skills": ["trading-signals"]
+}

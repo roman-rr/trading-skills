@@ -1,0 +1,4 @@
+interface:
+  display_name: "Trading Signals"
+  short_description: "Live AI crypto trading signals with full trade setups and verification"
+  brand_color: "#7fc8ff"
