@@ -28,7 +28,7 @@ npx skills add roman-rr/trading-skills
 Add as an MCP server for native tool integration:
 
 ```bash
-claude mcp add trading-signals --transport http -- https://aelita.x70.ai/mcp
+claude mcp add trading-signals --transport http -- https://signals.x70.ai/mcp
 ```
 
 Or add to Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -37,7 +37,7 @@ Or add to Claude Desktop config (`~/Library/Application Support/Claude/claude_de
 {
   "mcpServers": {
     "trading-signals": {
-      "url": "https://aelita.x70.ai/mcp"
+      "url": "https://signals.x70.ai/mcp"
     }
   }
 }
@@ -118,7 +118,7 @@ Once installed, ask your AI agent:
 
 ## Live Dashboard
 
-Track real-time performance: **https://aelita.x70.ai/signals/dashboard**
+Track real-time performance: **https://signals.x70.ai/signals/dashboard**
 
 ## Contributing
 
