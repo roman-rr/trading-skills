@@ -1,7 +1,7 @@
 # Trading Signals
 
 
-<img width="500" height="333" alt="trading-skills-signals-claude-skills-codex" src="https://github.com/user-attachments/assets/af1c980c-7f63-4154-bc98-32c27bcb0b13" />
+![Trading Signals for AI Agents](https://signals.x70.ai/banner.jpg)
 
 `Live AI crypto trading signals for Claude Code, OpenAI Codex, and AI coding agents.`
 
