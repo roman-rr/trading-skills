@@ -1,11 +1,10 @@
 # Trading Signals
 
-
 ![Trading Signals for AI Agents](https://signals.x70.ai/banner.jpg)
 
-`Live AI crypto trading signals for Claude Code, OpenAI Codex, and AI coding agents.`
+`17 triggers. 44 algorithms. 3 AI experts. Every signal backed by causal reasoning and verified against real prices.`
 
-Production-grade signal API powered by 33 research-grounded algorithms. Every signal includes full trade setup, causal reasoning chain, and automated verification against real market prices.
+Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30+ AI agents. Every signal includes entry, SL, TP, leverage, position size, and a full transmission chain showing exactly which data points led to the trade.
 
 **FREE during beta.** Star this repo to support continued development.
 
@@ -58,45 +57,38 @@ cp -r trading-skills/trading-signals ~/.claude/skills/trading-signals
 cp -r trading-skills/trading-signals ~/.codex/skills/trading-signals
 ```
 
-## Intelligence, Not Guesswork
+## Always Watching
 
-Every signal is backed by a multi-dimensional analysis pipeline that processes funding rates, order flow, technical structure, and market microstructure simultaneously.
+**17 Triggers. 6 Groups. Every Minute.**
 
-### Multi-Expert Consensus
+The sentinel scans 50+ perpetual markets for anomalies across six orthogonal dimensions -- from order book microstructure to Deribit options flow. A signal fires only when 2+ groups agree.
 
-Three specialized AI experts analyze independently: Technical (price action, TA indicators), Flow (derivatives, funding, OI), and Regime (macro context, expectation gaps). Signals require agreement -- conflicting views are flagged or filtered.
+| Group | Triggers | What It Detects |
+|-------|----------|-----------------|
+| **Volume & Liquidity** | `volume_spike` `liquidation_cascade` `cvd_divergence` `vpin_toxicity` | Unusual volume, mass liquidations, hidden directional flow, informed trading pressure |
+| **Positioning** | `funding_extreme` `funding_velocity` `funding_reversal` `oi_divergence` `basis_spread` | Funding rate extremes, velocity shifts, post-crowding reversals, OI divergence, basis dislocation |
+| **Price Dynamics** | `breakout_5m` `breakout_15m` `breakout_60m` | Multi-window breakout detection at different speeds |
+| **Cross-Asset** | `beta_divergence` `oi_redistribution` | Alt decoupling from BTC, capital rotation between coins |
+| **Microstructure** | `obi_imbalance` `trade_arrival_spike` | Order book structure and trade intensity for early signals |
+| **Options-Derived** | `dvol_spike` `pc_ratio_shift` `iv_skew_shift` | Forward-looking signals from Deribit -- what smart money expects |
 
-### Transmission Chains
+```
+Anomalies (17 triggers) → Confluence (2+ groups) → Trend Phase (13 detectors) → Signal (3 experts merge)
+```
 
-Every signal includes 2-4 causal reasoning steps. See exactly which data points led to the trade -- from funding rate extremes to liquidation clusters to MACD crossovers.
+## Multi-Expert Consensus
 
-### Paper Trading P&L
+Three specialized AI experts analyze independently:
 
-Every signal is a real trade on a virtual account. The system auto-tightens risk when drawdown increases. Kelly Criterion (half-Kelly) provides mathematically optimal position sizing as advisory data.
+- **Technical** -- price action, TA indicators, multi-timeframe structure
+- **Flow** -- derivatives, funding, OI, liquidation clusters, CVD
+- **Regime** -- macro context, expectation gaps, cross-asset correlation
 
-### Dynamic Risk Control
+Signals require agreement. Conflicting views are flagged or filtered. Each expert uses Thompson sampling for model selection -- the system learns which models perform best per market condition.
 
-Confidence-based leverage caps, ATR-calibrated stop losses, and automatic regime detection. Balance-based regimes (CAPITAL_PROTECT, STEADY_GROWTH, AGGRESSIVE_GROWTH) control risk magnitude without restricting trade direction.
+## Research-Grounded -- 44 Methods, 53 Citations
 
-### Market Sentinel
-
-Continuous anomaly detection across funding rates, volume spikes, OI divergence, CVD, and liquidation clusters. CUSUM change-point detection, Modified Z-score, kurtosis analysis, and Benjamini-Hochberg FDR control. Event-driven, not scheduled.
-
-### Auto-Verification
-
-Every signal is verified at the AI-chosen timeframe. TP/SL monitoring runs every minute via WebSocket + polling. Rules engine resolves remaining signals.
-
-## How It Works
-
-1. **Market Anomaly Detected** -- The sentinel monitors 58+ coins across 14 trigger strategies
-2. **17-Dimension Data Prefetch** -- Funding, order books, trades, TA indicators, news, smart money -- all in parallel
-3. **Multi-Expert AI Analysis** -- Technical + Flow experts run in parallel with independent model selection (Thompson sampling)
-4. **Consensus & Risk Gate** -- Experts must agree. Confidence is weighted. Risk regime enforces leverage, sizing, and SL floors
-5. **Signal Delivered** -- Complete trade setup: entry, SL, TP, leverage, position size, and the full reasoning chain
-
-## Scientific Foundation -- 33 Research-Grounded Methods
-
-Every algorithm is backed by peer-reviewed research. 39 academic citations.
+Every algorithm is backed by peer-reviewed research from quantitative finance, statistics, and machine learning.
 
 | Area | Methods | Key References |
 |------|---------|----------------|
@@ -104,21 +96,29 @@ Every algorithm is backed by peer-reviewed research. 39 academic citations.
 | **Anomaly Detection** | CUSUM, Modified Z-score (MAD), EWMA beta, excess kurtosis, realized vol ratio, BH FDR | Page 1954, Iglewicz 1993, Andersen 2003 |
 | **Technical Analysis** | RSI, MACD, Bollinger Bands, ATR, ADX, VWAP, OLS slope + R2, swing S/R, Pearson correlation | Wilder 1978, Appel 1979, Bollinger 2001 |
 | **Multi-Expert AI** | MoE ensemble, Thompson sampling, weighted composite scoring, regime-adaptive weighting | Jacobs 1991, Thompson 1933, Chapelle 2011 |
-| **Market Microstructure** | CVD via tick rule, funding contrarian, options expiry pin risk, order book imbalance | Lee & Ready 1991, Easley 2012 |
+| **Market Microstructure** | CVD via tick rule, funding contrarian, options expiry pin risk, order book imbalance | Lee & Ready 1991, Easley 2012, Avellaneda 2003 |
 | **Risk Management** | Balance-based regime switching, profit factor, walk-forward validation, ISQ (MAUT) | Boyd 2017, Van Tharp 1998, Keeney 1976 |
 
 ## What You Get
 
 | Feature | Description |
 |---------|-------------|
-| Live signals | Bullish/bearish crypto signals with full trade setups (entry, SL, TP, leverage) |
+| Live signals | Bullish/bearish with full trade setup -- entry, SL, TP, leverage, position size |
 | Transmission chains | 2-4 causal reasoning steps per signal with specific data points |
 | 50+ coins | Dynamically selected from top volume, funding, and OI on Hyperliquid perps |
 | Confidence score | 0-100 AI conviction level per signal |
-| Auto-verification | Every signal tracked against real market prices (TP/SL monitoring every minute) |
-| ROI tracking | Leverage-adjusted profit/loss per signal |
+| Auto-verification | Every signal tracked against real prices -- TP/SL monitoring every minute |
+| Paper trading P&L | Real trades on a virtual account with Kelly-optimal sizing |
+| Dynamic risk control | Confidence-based leverage caps, ATR-calibrated SL, automatic regime detection |
 | Performance stats | Hit rate, cumulative ROI, profit factor, breakdown by direction/coin/model |
-| Risk regimes | Automatic tightening when drawdown increases (CAPITAL_PROTECT, STEADY_GROWTH, etc.) |
+
+## Signal Preview
+
+| Coin | Dir | Conf | Entry | SL | TP | Lev | R/R | Type |
+|------|-----|------|-------|----|----|-----|-----|------|
+| BTC | Bull | 87% | $68,450 | $67,200 | $71,800 | 3x | 2.7 | momentum_shift |
+| ETH | Bear | 82% | $3,840 | $3,920 | $3,680 | 2x | 2.0 | funding_anomaly |
+| SOL | Bull | 79% | $142.50 | $138.00 | $152.00 | 2x | 2.1 | volume_spike |
 
 ## API Endpoints
 
@@ -128,14 +128,6 @@ Every algorithm is backed by peer-reviewed research. 39 academic citations.
 | GET | /api/skill/signals | API key | List signals (active/verified/all) |
 | GET | /api/skill/signals/:id | API key | Single signal detail |
 | GET | /api/skill/stats | API key | Performance statistics |
-
-## Signal Preview
-
-| Coin | Dir | Conf | Entry | SL | TP | Lev | R/R | Type |
-|------|-----|------|-------|----|----|-----|-----|------|
-| BTC | Bull | 87% | $68,450 | $67,200 | $71,800 | 3x | 2.7 | momentum_shift |
-| ETH | Bear | 82% | $3,840 | $3,920 | $3,680 | 2x | 2.0 | funding_anomaly |
-| SOL | Bull | 79% | $142.50 | $138.00 | $152.00 | 2x | 2.1 | volume_spike |
 
 ## Example Prompts
 
@@ -147,17 +139,11 @@ Once installed, ask your AI agent:
 - *"Build me a Python script that fetches crypto signals and alerts me on Telegram"*
 - *"Show me verified signals from the last week -- what hit TP?"*
 
-## Available Skills
-
-| Skill | Description |
-|-------|-------------|
-| [trading-signals](trading-signals/SKILL.md) | Live AI crypto trading signals API with full trade setups and verification |
-
 ## Links
 
 - **Live signals**: [signals.x70.ai](https://signals.x70.ai)
-- **MCP docs**: [signals.x70.ai/mcp-docs](https://signals.x70.ai/mcp-docs)
 - **Skills page**: [signals.x70.ai/skills](https://signals.x70.ai/skills)
+- **MCP docs**: [signals.x70.ai/mcp-docs](https://signals.x70.ai/mcp-docs)
 - **Smithery**: [smithery.ai/servers/roman-rr/trading-signals](https://smithery.ai/servers/roman-rr/trading-signals)
 
 ## Pricing
