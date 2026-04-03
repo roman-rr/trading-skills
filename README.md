@@ -61,43 +61,17 @@ cp -r trading-skills/trading-signals ~/.codex/skills/trading-signals
 
 **17 Triggers. 6 Groups. Every Minute.**
 
-The sentinel scans 50+ perpetual markets for anomalies across six orthogonal dimensions -- from order book microstructure to Deribit options flow. A signal fires only when 2+ groups agree.
-
-| Group | Triggers | What It Detects |
-|-------|----------|-----------------|
-| **Volume & Liquidity** | `volume_spike` `liquidation_cascade` `cvd_divergence` `vpin_toxicity` | Unusual volume, mass liquidations, hidden directional flow, informed trading pressure |
-| **Positioning** | `funding_extreme` `funding_velocity` `funding_reversal` `oi_divergence` `basis_spread` | Funding rate extremes, velocity shifts, post-crowding reversals, OI divergence, basis dislocation |
-| **Price Dynamics** | `breakout_5m` `breakout_15m` `breakout_60m` | Multi-window breakout detection at different speeds |
-| **Cross-Asset** | `beta_divergence` `oi_redistribution` | Alt decoupling from BTC, capital rotation between coins |
-| **Microstructure** | `obi_imbalance` `trade_arrival_spike` | Order book structure and trade intensity for early signals |
-| **Options-Derived** | `dvol_spike` `pc_ratio_shift` `iv_skew_shift` | Forward-looking signals from Deribit -- what smart money expects |
-
-```
-Anomalies (17 triggers) → Confluence (2+ groups) → Trend Phase (13 detectors) → Signal (3 experts merge)
-```
+The sentinel continuously scans 50+ perpetual markets for anomalies across six orthogonal dimensions -- volume, positioning, price dynamics, cross-asset flows, microstructure, and options-derived signals. A signal fires only when multiple independent dimensions agree, filtering noise from genuine opportunities.
 
 ## Multi-Expert Consensus
 
-Three specialized AI experts analyze independently:
+Three specialized AI experts analyze every opportunity independently -- each with a different lens on market structure. Signals require agreement; conflicting views are flagged or filtered. The system continuously learns which analytical approaches perform best per market condition.
 
-- **Technical** -- price action, TA indicators, multi-timeframe structure
-- **Flow** -- derivatives, funding, OI, liquidation clusters, CVD
-- **Regime** -- macro context, expectation gaps, cross-asset correlation
+## Research-Grounded
 
-Signals require agreement. Conflicting views are flagged or filtered. Each expert uses Thompson sampling for model selection -- the system learns which models perform best per market condition.
+**44 Scientific Methods. 53 Academic Citations.**
 
-## Research-Grounded -- 44 Methods, 53 Citations
-
-Every algorithm is backed by peer-reviewed research from quantitative finance, statistics, and machine learning.
-
-| Area | Methods | Key References |
-|------|---------|----------------|
-| **Position Sizing** | Kelly Criterion (half-Kelly), ATR normalization, Turtle Traders model | Kelly 1956, Thorp 2006, Faith 2007 |
-| **Anomaly Detection** | CUSUM, Modified Z-score (MAD), EWMA beta, excess kurtosis, realized vol ratio, BH FDR | Page 1954, Iglewicz 1993, Andersen 2003 |
-| **Technical Analysis** | RSI, MACD, Bollinger Bands, ATR, ADX, VWAP, OLS slope + R2, swing S/R, Pearson correlation | Wilder 1978, Appel 1979, Bollinger 2001 |
-| **Multi-Expert AI** | MoE ensemble, Thompson sampling, weighted composite scoring, regime-adaptive weighting | Jacobs 1991, Thompson 1933, Chapelle 2011 |
-| **Market Microstructure** | CVD via tick rule, funding contrarian, options expiry pin risk, order book imbalance | Lee & Ready 1991, Easley 2012, Avellaneda 2003 |
-| **Risk Management** | Balance-based regime switching, profit factor, walk-forward validation, ISQ (MAUT) | Boyd 2017, Van Tharp 1998, Keeney 1976 |
+Every algorithm is grounded in peer-reviewed research from quantitative finance, statistics, and machine learning -- spanning position sizing, anomaly detection, technical analysis, market microstructure, and adaptive risk management.
 
 ## What You Get
 
@@ -108,8 +82,8 @@ Every algorithm is backed by peer-reviewed research from quantitative finance, s
 | 50+ coins | Dynamically selected from top volume, funding, and OI on Hyperliquid perps |
 | Confidence score | 0-100 AI conviction level per signal |
 | Auto-verification | Every signal tracked against real prices -- TP/SL monitoring every minute |
-| Paper trading P&L | Real trades on a virtual account with Kelly-optimal sizing |
-| Dynamic risk control | Confidence-based leverage caps, ATR-calibrated SL, automatic regime detection |
+| Paper trading P&L | Real trades on a virtual account with optimal position sizing |
+| Dynamic risk control | Confidence-based leverage caps, volatility-calibrated SL, automatic regime detection |
 | Performance stats | Hit rate, cumulative ROI, profit factor, breakdown by direction/coin/model |
 
 ## Signal Preview
@@ -149,8 +123,6 @@ Once installed, ask your AI agent:
 ## Pricing
 
 **FREE during beta** -- no charges, no credit card.
-
-Future: Free tier (60/min, 7d history) / Pro $29/mo (higher limits, 90d, websocket).
 
 ## Contributing
 
