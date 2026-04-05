@@ -1,12 +1,14 @@
 # Trading Signals
 
+> **⭐ Enjoying free signals? Push STAR to keep them free — it directly supports higher accuracy and continued development!**
+
 ![Trading Signals for AI Agents](https://signals.x70.ai/banner.jpg)
 
 `17 triggers. 44 algorithms. 3 AI experts. Every signal backed by causal reasoning and verified against real prices.`
 
 Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30+ AI agents. Every signal includes entry, SL, TP, leverage, position size, and a full transmission chain showing exactly which data points led to the trade.
 
-**FREE during beta.** Star this repo to support continued development.
+**FREE during beta.** More stars = more development time = better signals for everyone.
 
 ## Install
 
@@ -40,7 +42,7 @@ Or add to Claude Desktop config (`~/Library/Application Support/Claude/claude_de
 }
 ```
 
-Exposes 4 tools: `register`, `get_signals`, `get_signal`, `get_stats`.
+Exposes 5 tools: `register`, `get_signals`, `get_signal`, `get_signal_history`, `get_stats`.
 
 ### OpenAI Codex CLI
 

@@ -61,7 +61,7 @@ For Claude Desktop, Claude Code, or Cursor — add as an MCP server for native t
 ```
 MCP endpoint: https://signals.x70.ai/mcp
 Transport: Streamable HTTP (POST)
-Tools: register, get_signals, get_signal, get_stats
+Tools: register, get_signals, get_signal, get_signal_history, get_stats
 ```
 
 Claude Desktop config:
@@ -139,10 +139,11 @@ curl "https://signals.x70.ai/api/skill/signals?status=active&limit=10" \
 
 | Param | Default | Description |
 |-------|---------|-------------|
-| limit | 20 | Max signals to return (1-50) |
+| limit | 10 | Max signals to return (1-100) |
 | days | 7 | Lookback window (1-30 days) |
+| coin | — | Filter by coin symbol (e.g. BTC, ETH) |
 
-Returns only live signals (unverified + pending). Resolved signals are not included.
+Returns only live signals (unverified + pending) sorted by live PnL (most profitable first). Each signal includes `livePrice`, `livePnlPct`, and `transmissionChain`. Resolved signals are not included — use `/signals/history` or MCP `get_signal_history` for those.
 
 ### GET /signals/:id
 
@@ -150,6 +151,8 @@ Returns only live signals (unverified + pending). Resolved signals are not inclu
 curl "https://signals.x70.ai/api/skill/signals/SIGNAL_ID" \
   -H "X-Api-Key: ask_YOUR_KEY"
 ```
+
+Returns full signal detail with live price and PnL.
 
 ### GET /stats
 
