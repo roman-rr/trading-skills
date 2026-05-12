@@ -136,4 +136,4 @@ Issues, feature requests, and PRs are welcome. Please open an issue first to dis
 
 ## Author
 
-**Roman Antonov** -- [github.com/roman-rr](https://github.com/roman-rr) | [roman-rr.github.io](https://roman-rr.github.io/) | romwtb@gmail.com
+**Roman Antonov** -- [github.com/roman-rr](https://github.com/roman-rr)
