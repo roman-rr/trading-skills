@@ -117,10 +117,8 @@ Once installed, ask your AI agent:
 
 ## Links
 
-- **Live signals**: [signals.x70.ai](https://signals.x70.ai)
 - **Skills page**: [signals.x70.ai/skills](https://signals.x70.ai/skills)
 - **MCP docs**: [signals.x70.ai/mcp-docs](https://signals.x70.ai/mcp-docs)
-- **Smithery**: [smithery.ai/servers/roman-rr/trading-signals](https://smithery.ai/servers/roman-rr/trading-signals)
 
 ## Pricing
 
