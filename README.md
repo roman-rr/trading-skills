@@ -115,11 +115,6 @@ Once installed, ask your AI agent:
 - *"Build me a Python script that fetches crypto signals and alerts me on Telegram"*
 - *"Show me verified signals from the last week -- what hit TP?"*
 
-## Links
-
-- **Skills page**: [signals.x70.ai/skills](https://signals.x70.ai/skills)
-- **MCP docs**: [signals.x70.ai/mcp-docs](https://signals.x70.ai/mcp-docs)
-
 ## Pricing
 
 **FREE during beta** -- no charges, no credit card.
@@ -131,7 +126,3 @@ Issues, feature requests, and PRs are welcome. Please open an issue first to dis
 ## License
 
 **Proprietary** -- Free API during beta. Paid license required for commercial redistribution. See [LICENSE.txt](LICENSE.txt).
-
-## Author
-
-**Roman Antonov** -- [github.com/roman-rr](https://github.com/roman-rr)
