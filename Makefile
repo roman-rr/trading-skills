@@ -32,3 +32,17 @@ build:
 
 clean:
 	rm -rf dist
+
+# ── Paper-trading bot (bots/paper-trader) ──────────────────────────────────
+.PHONY: bot-test sync-fixtures
+PYTHONS ?= $(shell for v in 3.8 3.9 3.10 3.11 3.12 3.13 3.14; do command -v python$$v; done; command -v python3)
+SIGNALS_REPO ?= ../signals
+
+bot-test:
+	@for py in $(sort $(PYTHONS)); do \
+		printf "%s: " "$$($$py --version 2>&1)"; \
+		$$py -m unittest discover -s bots/paper-trader/tests 2>&1 | tail -1 || exit 1; \
+	done
+
+sync-fixtures:
+	cp $(SIGNALS_REPO)/tests/fixtures/skill-api/*.json bots/paper-trader/tests/fixtures/

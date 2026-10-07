@@ -1,0 +1,85 @@
+{
+  "success": true,
+  "signals": [
+    {
+      "id": "6aa000000000000000000001",
+      "coin": "SOL",
+      "direction": "bearish",
+      "confidence": 71,
+      "type": "momentum",
+      "tags": [
+        "trend_trending_down"
+      ],
+      "summary": "Funding flipped positive while OI fell.",
+      "transmissionChain": [],
+      "invalidationConditions": [],
+      "executionHints": [],
+      "entryPrice": 142.5,
+      "stopLoss": 148.2,
+      "takeProfit": 136.1,
+      "leverage": 3,
+      "riskRewardRatio": 1.12,
+      "livePrice": 141.9,
+      "livePnlPct": 0.42,
+      "verification": {
+        "status": "pending",
+        "priceChangePct": 0.4,
+        "maxFavorablePct": 0.9,
+        "theoreticalProfitPct": null,
+        "stopLossHit": false,
+        "takeProfitHit": false,
+        "directionCorrect": null,
+        "tpProgressPct": null,
+        "verifiedAt": null
+      },
+      "roi": null,
+      "createdAt": "2026-10-07T10:00:00.000Z",
+      "anomalyChain": null,
+      "requiresSubscription": false
+    },
+    {
+      "id": "6aa000000000000000000002",
+      "coin": "XRP",
+      "direction": "bullish",
+      "confidence": 66,
+      "type": "breakout",
+      "tags": [],
+      "summary": "Range break on rising volume.",
+      "transmissionChain": [],
+      "invalidationConditions": [],
+      "executionHints": [],
+      "entryPrice": 2.5,
+      "stopLoss": 2.42,
+      "takeProfit": 2.64,
+      "leverage": 2,
+      "riskRewardRatio": 1.75,
+      "livePrice": 2.51,
+      "livePnlPct": 0.4,
+      "verification": {
+        "status": "unverified",
+        "priceChangePct": 0,
+        "maxFavorablePct": 0,
+        "theoreticalProfitPct": null,
+        "stopLossHit": null,
+        "takeProfitHit": null,
+        "directionCorrect": null,
+        "tpProgressPct": null,
+        "verifiedAt": null
+      },
+      "roi": null,
+      "createdAt": "2026-10-07T10:00:00.000Z",
+      "anomalyChain": null,
+      "requiresSubscription": false
+    }
+  ],
+  "returned": 2,
+  "totalMatching": 2,
+  "filtersApplied": {},
+  "meta": {
+    "plan": "pro",
+    "limit": 10,
+    "days": 7,
+    "filter": "live",
+    "dataDepth": true
+  }
+}

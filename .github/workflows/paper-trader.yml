@@ -1,0 +1,48 @@
+name: paper-trader
+
+on:
+  push:
+    paths: ["bots/paper-trader/**", ".github/workflows/paper-trader.yml"]
+  pull_request:
+    paths: ["bots/paper-trader/**", ".github/workflows/paper-trader.yml"]
+  schedule:
+    - cron: "17 6 * * *"   # daily: is the live API still what the bot expects?
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.12", "3.13"]
+        include:
+          - os: ubuntu-22.04
+            python: "3.8"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -v -s bots/paper-trader/tests
+
+  live-selftest:
+    # Free-plan key stored as a repository secret; skipped if it isn't set.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Selftest against https://signals.x70.ai
+        env:
+          SIGNALS_API_KEY: ${{ secrets.SIGNALS_TEST_FREE_KEY }}
+        run: |
+          if [ -z "$SIGNALS_API_KEY" ]; then echo "SIGNALS_TEST_FREE_KEY not set — skipping"; exit 0; fi
+          python bots/paper-trader/paper_trader.py --selftest

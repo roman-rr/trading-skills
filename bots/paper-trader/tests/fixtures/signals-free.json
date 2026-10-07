@@ -1,0 +1,99 @@
+{
+  "success": true,
+  "signals": [
+    {
+      "id": "6aa000000000000000000001",
+      "coin": "SOL",
+      "direction": "bearish",
+      "confidence": 71,
+      "type": "momentum",
+      "tags": [
+        "trend_trending_down"
+      ],
+      "summary": "Funding flipped positive while OI fell.",
+      "transmissionChain": [],
+      "invalidationConditions": [],
+      "executionHints": [],
+      "entryPrice": null,
+      "stopLoss": null,
+      "takeProfit": null,
+      "leverage": null,
+      "riskRewardRatio": null,
+      "positionSize": null,
+      "livePrice": 141.9,
+      "livePnlPct": null,
+      "verification": {
+        "status": "pending",
+        "priceChangePct": 0.4,
+        "maxFavorablePct": 0.9,
+        "theoreticalProfitPct": null,
+        "stopLossHit": false,
+        "takeProfitHit": false,
+        "directionCorrect": null,
+        "tpProgressPct": null,
+        "verifiedAt": null
+      },
+      "roi": null,
+      "createdAt": "2026-10-07T10:00:00.000Z",
+      "anomalyChain": null,
+      "requiresSubscription": true
+    },
+    {
+      "id": "6aa000000000000000000002",
+      "coin": "XRP",
+      "direction": "bullish",
+      "confidence": 66,
+      "type": "breakout",
+      "tags": [],
+      "summary": "Range break on rising volume.",
+      "transmissionChain": [],
+      "invalidationConditions": [],
+      "executionHints": [],
+      "entryPrice": null,
+      "stopLoss": null,
+      "takeProfit": null,
+      "leverage": null,
+      "riskRewardRatio": null,
+      "positionSize": null,
+      "livePrice": 2.51,
+      "livePnlPct": null,
+      "verification": {
+        "status": "unverified",
+        "priceChangePct": 0,
+        "maxFavorablePct": 0,
+        "theoreticalProfitPct": null,
+        "stopLossHit": null,
+        "takeProfitHit": null,
+        "directionCorrect": null,
+        "tpProgressPct": null,
+        "verifiedAt": null
+      },
+      "roi": null,
+      "createdAt": "2026-10-07T10:00:00.000Z",
+      "anomalyChain": null,
+      "requiresSubscription": true
+    }
+  ],
+  "returned": 2,
+  "totalMatching": 2,
+  "filtersApplied": {},
+  "meta": {
+    "plan": "free",
+    "limit": 10,
+    "days": 1,
+    "filter": "live",
+    "dataDepth": true
+  },
+  "upgrade": {
+    "title": "Free plan — you see coin + direction. Pro unlocks the trade levels.",
+    "message": "Entry, stop-loss and take-profit are Pro-only, so they are null on this key. Upgrade: https://signals.x70.ai/api/go/upgrade?src=rest&kid=0123456789abcdef01234567",
+    "proUnlocks": [
+      "entryPrice, stopLoss, takeProfit, leverage (currently null on free)",
+      "riskRewardRatio + positionSize",
+      "30-day history depth (free: 24h)",
+      "No rate limit (free: 300/hr)"
+    ],
+    "price": "Pro: $35/month or $300/year. Cancel anytime.",
+    "upgradeUrl": "https://signals.x70.ai/api/go/upgrade?src=rest&kid=0123456789abcdef01234567"
+  }
+}
