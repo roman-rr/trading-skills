@@ -10,7 +10,10 @@ expires), and logs every trade — wins and losses — to a CSV you own.
 - **Honest fills.** It opens at the live price it actually observed (not the
   signal's ideal entry), charges fees on both sides, fills a stop at the worse
   of the stop and the observed price, and a target exactly at the target —
-  never better.
+  never better. Once the server has resolved a signal, its verdict decides the
+  exit, not a price seen later: a stop-out books at the stop (also when both
+  levels were hit), a target hit at the target, and an expired signal at the
+  last live price the bot observed.
 
 > Signals can be wrong, and past results don't predict future results. Paper
 > results leave out things real trading has, such as slippage beyond the
@@ -22,18 +25,19 @@ Get a free API key at <https://signals.x70.ai/dashboard/mcp-key> (new accounts
 get a 14-day Pro trial, no card), then:
 
 ```bash
-export SIGNALS_API_KEY=<your key>
+export SIGNALS_API_KEY=<your key>       # Windows PowerShell: $env:SIGNALS_API_KEY = "<your key>"
 ```
 
-and paste [prompt.md](prompt.md) into Claude Code, Codex or Cursor. The agent
-downloads the bot, verifies its checksum, checks your key and starts it in the
-background.
+then start Claude Code, Codex or Cursor from that same terminal (one that is
+already running, or opened from the Dock or Start menu, won't see the key) and
+paste [prompt.md](prompt.md). The agent downloads the bot, verifies its
+checksum, checks your key and starts it in the background.
 
 ## Quick start by hand
 
 ```bash
 mkdir signals-paper-trader && cd signals-paper-trader
-curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/paper-trader-v1.0.0/bots/paper-trader/paper_trader.py
+curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/paper-trader-v1.0.1/bots/paper-trader/paper_trader.py
 python3 paper_trader.py --selftest          # checks the key and the API
 nohup python3 paper_trader.py >> paper_trader.log 2>&1 &
 python3 paper_trader.py --report            # results so far, any time
@@ -47,7 +51,7 @@ OPEN  SOL    short @ 142.31 (signal entry 142.5) stop 148.2 target 136.1
 OPEN  ETH    short @ 2566.5 (signal entry 2568.5) stop 2607.5 target 2550.0
 CLOSE SOL    short target   @ 136.1  +4.27 USD (+4.27%)
 CLOSE ETH    short stop     @ 2607.5  -1.69 USD (-1.69%)
-Paper results so far: <n> closed · win rate <x>% · net $<y> (mean $<z> / trade) · open: <k>
+Paper results so far: <n> closed | win rate <x>% | net $<y> (mean $<z> / trade) | open: <k>
 ```
 (Illustrative lines — your results are whatever the signals do.)
 
@@ -89,7 +93,10 @@ second copy in the same folder exits instead of double-trading).
 
 ## Exit codes
 
-`0` ok · `2` bad arguments or no API key · `3` API key rejected (401) ·
+`0` ok · `1` network, SSL or server error during `--selftest` (on macOS with
+Python from python.org, `CERTIFICATE_VERIFY_FAILED` means running "Install
+Certificates.command" from the Python folder in Applications) ·
+`2` bad arguments or no API key · `3` API key rejected (401) ·
 `4` the API response format changed — update the bot · `5` already running here
 
 ## Development

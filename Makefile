@@ -41,7 +41,11 @@ SIGNALS_REPO ?= ../signals
 bot-test:
 	@for py in $(sort $(PYTHONS)); do \
 		printf "%s: " "$$($$py --version 2>&1)"; \
-		$$py -m unittest discover -s bots/paper-trader/tests 2>&1 | tail -1 || exit 1; \
+		if out=$$($$py -m unittest discover -s bots/paper-trader/tests 2>&1); then \
+			echo "$$out" | tail -1; \
+		else \
+			echo "FAILED"; echo "$$out"; exit 1; \
+		fi; \
 	done
 
 sync-fixtures:

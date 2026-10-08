@@ -19,9 +19,13 @@ the current directory): paper_state.json, paper_trades.csv, paper_trader.lock.
 Fills are deliberately conservative: a position opens at the live price first
 observed (not the signal's entry), fees are charged on both sides, a stop
 fills at the worse of the stop and the observed price, and a target fills
-exactly at the target, never better.
+exactly at the target, never better. Once the server has resolved a signal,
+its verdict decides the exit, not the price seen later: stop at the stop (also
+when both levels were hit), target at the target, and an expired signal at the
+last live price the bot observed.
 
-Exit codes: 0 ok · 2 bad arguments / no API key · 3 API key rejected (401)
+Exit codes: 0 ok · 1 network / SSL / server error (--selftest) or a crash
+2 bad arguments / no API key · 3 API key rejected (401)
 4 API response format changed (update the bot) · 5 another instance is running
 """
 
@@ -30,6 +34,7 @@ import csv
 import json
 import os
 import random
+import re
 import signal
 import sys
 import time
@@ -38,7 +43,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 REPO_URL = "https://github.com/roman-rr/trading-skills/tree/main/bots/paper-trader"
 USER_AGENT = "signals-paper-trader/%s (+https://github.com/roman-rr/trading-skills)" % VERSION
 DEFAULT_BASE = "https://signals.x70.ai"
@@ -47,7 +52,7 @@ STATE_VERSION = 1
 STATE_FILE, TRADES_FILE, LOCK_FILE = "paper_state.json", "paper_trades.csv", "paper_trader.lock"
 SEEN_TTL_S = 35 * 86400
 SKIP_REPORT_EVERY_S = 6 * 3600
-TERMINAL = ("success", "failed")
+TERMINAL = ("success", "failed", "expired")
 
 EXIT_OK, EXIT_ARGS, EXIT_AUTH, EXIT_FORMAT, EXIT_LOCKED = 0, 2, 3, 4, 5
 
@@ -127,6 +132,18 @@ def num(v):
         return None
 
 
+def one_line(body, limit=120):
+    """An error body as one short log line: an HTML page's <title> (a proxy's
+    502 page is 7 lines), anything else with whitespace collapsed and cut."""
+    m = re.search(r"<title[^>]*>(.*?)</title>", body, re.I | re.S)
+    if m:
+        body = m.group(1)
+    elif re.search(r"<(!doctype|html|head|body)\b", body, re.I):
+        return ""  # HTML without a title: the status says enough
+    body = " ".join(body.split())
+    return body if len(body) <= limit else body[:limit - 3] + "..."
+
+
 def side_of(direction):
     return "short" if str(direction).lower() in ("bearish", "short") else "long"
 
@@ -162,6 +179,25 @@ def exit_for_price(side, stop, target, price):
     return None
 
 
+def decide_exit(pos, sig):
+    """(reason, fill) to close an open position at, or None to keep it.
+    The server's verdict comes first: after a sleep or backoff gap the price
+    seen now may have crossed the target although the server already booked
+    the stop (or the reverse). Only an unresolved signal is judged on price."""
+    ver = sig.get("verification") or {}
+    if ver.get("status") in TERMINAL:
+        if ver.get("stopLossHit"):  # stop first if both were hit
+            return "stop", pos["stop"]
+        if ver.get("takeProfitHit"):
+            return "target", pos["target"]
+        # Expired, or resolved at the end of its window with neither level hit.
+        return "expired", pos.get("last_price") or pos["fill"]
+    price = num(sig.get("livePrice"))
+    if price is None:
+        return None
+    return exit_for_price(pos["side"], pos["stop"], pos["target"], price)
+
+
 def pnl(side, fill, exit_price, notional, fee_bps):
     qty = notional / fill
     gross = (exit_price - fill) * qty * (1 if side == "long" else -1)
@@ -187,6 +223,12 @@ def load_state(state_dir, preset):
         raise SystemExit("paper_state.json has an unknown version; move it aside to start fresh")
     for k, v in new_state(preset).items():
         st.setdefault(k, v)
+    # A close goes to the CSV first and to the state second. If the bot was
+    # killed in between, the CSV row is the truth: drop the position instead
+    # of closing it a second time.
+    closed = set(t.get("signal_id") for t in read_trades(state_dir))
+    for sid in [s for s in st["positions"] if s in closed]:
+        del st["positions"][sid]
     return st
 
 
@@ -237,7 +279,8 @@ def pid_alive(pid):
 
 
 def acquire_lock(state_dir):
-    """Exclusive-create lock file holding our PID. Returns None or the running PID."""
+    """Exclusive-create lock file holding our PID. Returns None, the running PID,
+    or -1 if another copy keeps taking the lock as we free a stale one."""
     path = os.path.join(state_dir, LOCK_FILE)
     for _ in range(2):
         try:
@@ -253,7 +296,10 @@ def acquire_lock(state_dir):
                 pid = 0
             if pid and pid != os.getpid() and pid_alive(pid):
                 return pid
-            os.remove(path)  # stale lock from a crashed run
+            try:
+                os.remove(path)  # stale lock from a crashed run
+            except OSError:  # another copy removed it first
+                pass
     return -1
 
 
@@ -281,10 +327,14 @@ class Api(object):
             retry = e.headers.get("RateLimit-Reset") or e.headers.get("Retry-After")
             body = ""
             try:
-                body = e.read().decode("utf-8", "replace")[:300]
+                body = one_line(e.read().decode("utf-8", "replace")[:4096])
             except Exception:
                 pass
-            raise ApiError(e.code, "HTTP %d %s" % (e.code, body), num(retry))
+            if body.startswith(str(e.code)):  # "502 Bad Gateway" → "Bad Gateway"
+                body = body[len(str(e.code)):].lstrip()
+            if self.key:  # never log the key, even if an error page echoes the request
+                body = body.replace(self.key, "***")
+            raise ApiError(e.code, ("HTTP %d %s" % (e.code, body)).rstrip(), num(retry))
         except (urllib.error.URLError, OSError, ValueError) as e:
             raise ApiError(0, "network: %s" % e)
 
@@ -300,7 +350,7 @@ def build_parser():
                    help="only open signals younger than this many minutes (default 30)")
     p.add_argument("--fee-bps", type=float, default=4.5, help="fee per side in basis points (default 4.5)")
     p.add_argument("--stop-cap", type=float, default=None,
-                   help="keep the stop within N × the target distance (e.g. 1.0)")
+                   help="keep the stop within N x the target distance (e.g. 1.0)")
     p.add_argument("--preset", choices=sorted(PRESETS), default="all", help="signal filter preset")
     for flag, _ in FILTER_FLAGS:
         p.add_argument("--" + flag, default=None, help=argparse.SUPPRESS)
@@ -342,10 +392,12 @@ def summarize(trades, open_count=0):
     }
 
 
+# Everything the bot prints is plain ASCII: Windows consoles and redirected
+# output often use a legacy code page (cp932, cp1251, cp437, ...).
 def summary_line(s):
     if not s["closed"]:
-        return "Paper results so far: no closed trades yet · open positions: %d" % s["open"]
-    return ("Paper results so far: %d closed · win rate %.1f%% · net $%.2f (mean $%.3f / trade, %.3f%%) · open: %d"
+        return "Paper results so far: no closed trades yet | open positions: %d" % s["open"]
+    return ("Paper results so far: %d closed | win rate %.1f%% | net $%.2f (mean $%.3f / trade, %.3f%%) | open: %d"
             % (s["closed"], s["win_rate"], s["net_usd"], s["mean_usd"], s["mean_pct"], s["open"]))
 
 
@@ -398,10 +450,10 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
         miss = missing_fields(body, REQUIRED_LIST) + [
             "signals[].%s" % f for s in body.get("signals") or [] for f in missing_fields(s, REQUIRED_SIGNAL)]
         if miss:
-            out.write("API format changed (missing: %s) — update the bot: %s\n" % (", ".join(sorted(set(miss))), REPO_URL))
+            out.write("API format changed (missing: %s) - update the bot: %s\n" % (", ".join(sorted(set(miss))), REPO_URL))
             return EXIT_FORMAT
         plan = get_path(body, "meta.plan")[0]
-        out.write("OK · plan: %s · %d live signals match this filter\n" % (plan, len(body.get("signals") or [])))
+        out.write("OK | plan: %s | %d live signals match this filter\n" % (plan, len(body.get("signals") or [])))
         if plan != "pro":
             up = body.get("upgrade") or {}
             out.write("Free plan: you'll see coin + direction, but entry/stop/target are hidden, so the bot can't open "
@@ -410,30 +462,36 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
 
     running = acquire_lock(state_dir)
     if running is not None:
-        out.write("Another paper trader is already running here (pid %s). Stop it first: kill %s\n" % (running, running))
+        if running > 0:
+            out.write("Another paper trader is already running here (pid %s). Stop it first: kill %s\n"
+                      % (running, running))
+        else:
+            out.write("Could not take the lock %s: another paper trader is starting in this folder right now. "
+                      "Try again in a minute.\n" % os.path.join(state_dir, LOCK_FILE))
         return EXIT_LOCKED
 
     def on_signal(_signum, _frame):
         raise Stop()
 
-    old = {}
-    for sig_name in ("SIGINT", "SIGTERM"):
-        if hasattr(signal, sig_name):
-            try:
-                old[sig_name] = signal.signal(getattr(signal, sig_name), on_signal)
-            except ValueError:  # not the main thread (tests)
-                pass
-
-    st = load_state(state_dir, args.preset)
-    say("signals-paper-trader %s · PAPER TRADING ONLY — no real orders. Signals can be wrong; past results don't "
-        "predict future results." % VERSION)
-    say("preset %s %s · $%.0f per position · max %d open · fees %.1f bps/side%s · state: %s"
-        % (args.preset, json.dumps(filters, sort_keys=True), args.notional, args.max_open, args.fee_bps,
-           (" · stop cap %.2f× target" % args.stop_cap) if args.stop_cap else "", state_dir))
-
+    # From here on everything runs under the finally below, so a crash at any
+    # point (bad state file, startup output, ...) still releases the lock.
+    old, st = {}, None
     backoff, loops, code = 60, 0, EXIT_OK
     max_loops = 1 if args.once else args.max_loops
     try:
+        st = load_state(state_dir, args.preset)
+        for sig_name in ("SIGINT", "SIGTERM"):
+            if hasattr(signal, sig_name):
+                try:
+                    old[sig_name] = signal.signal(getattr(signal, sig_name), on_signal)
+                except ValueError:  # not the main thread (tests)
+                    pass
+        say("signals-paper-trader %s | PAPER TRADING ONLY - no real orders. Signals can be wrong; past results "
+            "don't predict future results." % VERSION)
+        say("preset %s %s | $%.0f per position | max %d open | fees %.1f bps/side%s | state: %s"
+            % (args.preset, json.dumps(filters, sort_keys=True), args.notional, args.max_open, args.fee_bps,
+               (" | stop cap %.2fx target" % args.stop_cap) if args.stop_cap else "", state_dir))
+
         while True:
             loops += 1
             delay, jitter = interval, True
@@ -443,7 +501,7 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
                     f for s in body.get("signals") or [] for f in missing_fields(s, REQUIRED_SIGNAL)]
                 if miss:
                     if not st["format_warned"]:
-                        say("API format changed (missing: %s) — not opening new trades; state kept. Update the bot: %s"
+                        say("API format changed (missing: %s) - not opening new trades; state kept. Update the bot: %s"
                             % (", ".join(sorted(set(miss))), REPO_URL))
                         st["format_warned"] = True
                 else:
@@ -458,10 +516,10 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
                 jitter = False
                 if e.status == 429:
                     delay = int(min(3600, max(60, e.retry_after or 60)))
-                    say("rate limited — waiting %ds" % delay)
+                    say("rate limited - waiting %ds" % delay)
                 else:
                     delay = backoff
-                    say("API error (%s) — retrying in %ds" % (e, delay))
+                    say("API error (%s) - retrying in %ds" % (e, delay))
                     backoff = min(900, backoff * 2)
             save_state(state_dir, st, now())
             if max_loops and loops >= max_loops:
@@ -471,10 +529,13 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
     except Stop:
         say("stopping (signal received)")
     finally:
-        save_state(state_dir, st, now())
-        release_lock(state_dir)
-        for sig_name, handler in old.items():
-            signal.signal(getattr(signal, sig_name), handler)
+        try:
+            if st is not None:
+                save_state(state_dir, st, now())
+        finally:
+            release_lock(state_dir)
+            for sig_name, handler in old.items():
+                signal.signal(getattr(signal, sig_name), handler)
     say(summary_line(summarize(read_trades(state_dir), len(st["positions"]))))
     return code
 
@@ -517,20 +578,9 @@ def tick(api, body, st, args, state_dir, now, say):
         price = num(sig.get("livePrice"))
         if price is not None:
             pos["last_price"] = price
-            hit = exit_for_price(pos["side"], pos["stop"], pos["target"], price)
-            if hit:
-                close_position(pos, hit[0], hit[1], now_s, args, state_dir, st, say)
-                continue
-        ver = sig.get("verification") or {}
-        if ver.get("status") in TERMINAL:
-            # The server resolved it. Book at the level it hit (stop first if
-            # both), otherwise at the last observed price (signal expired).
-            if ver.get("stopLossHit"):
-                close_position(pos, "stop", pos["stop"], now_s, args, state_dir, st, say)
-            elif ver.get("takeProfitHit"):
-                close_position(pos, "target", pos["target"], now_s, args, state_dir, st, say)
-            else:
-                close_position(pos, "expired", pos["last_price"], now_s, args, state_dir, st, say)
+        hit = decide_exit(pos, sig)
+        if hit:
+            close_position(pos, hit[0], hit[1], now_s, args, state_dir, st, say)
 
     # 2. The paywall moment: levels went null (free key, or a trial ended).
     #    Keyed on the plan itself, not on new signals: a trial that ends while
@@ -552,7 +602,7 @@ def tick(api, body, st, args, state_dir, now, say):
             st["last_skip_report"] = now_s
     elif plan == "pro" and st["paywall_shown"]:
         st["paywall_shown"] = False
-        say("Pro levels available again — opening new paper trades.")
+        say("Pro levels available again - opening new paper trades.")
 
     # 3. Open new positions from fresh signals.
     for sig in sorted(signals, key=lambda s: str(s.get("createdAt"))):
@@ -583,6 +633,13 @@ def tick(api, body, st, args, state_dir, now, say):
 
 
 def main():
+    # Text from the API (the upgrade title has an em dash) may not fit the
+    # console's code page; print '?' for it instead of crashing.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):  # not a regular text stream
+            pass
     sys.exit(run())
 
 

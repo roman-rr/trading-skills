@@ -2,7 +2,8 @@
 
 A scenario is a list of frames; the Nth GET /api/skill/signals returns frame N
 (the last frame repeats). A frame is either {"status": 429, "headers": {...}}
-for an error, or {"plan": "pro"|"free", "signals": [...], "details": {id: sig}}.
+for an error (add "body": "<html>..." to send a raw text/html body instead of
+JSON), or {"plan": "pro"|"free", "signals": [...], "details": {id: sig}}.
 Every request is recorded (path, query, headers) for assertions.
 """
 import json
@@ -10,6 +11,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
+KEY = "ask_test_key_000000000000000000000"
 UPGRADE = {"title": "Free plan — you see coin + direction. Pro unlocks the trade levels.",
            "upgradeUrl": "https://signals.x70.ai/api/go/upgrade?src=bot&kid=0123456789abcdef01234567"}
 
@@ -27,7 +29,7 @@ def signal(sid, coin="SOL", direction="bearish", entry=100.0, stop=104.0, target
 
 
 class FakeApi(object):
-    def __init__(self, frames, key="ask_test_key_000000000000000000000"):
+    def __init__(self, frames, key=KEY):
         self.frames, self.key, self.requests, self.list_calls = frames, key, [], 0
         api = self
 
@@ -44,7 +46,7 @@ class FakeApi(object):
                     frame = api.frames[min(api.list_calls, len(api.frames) - 1)]
                     api.list_calls += 1
                     if "status" in frame:
-                        return self._send(frame["status"], {"error": "x"}, frame.get("headers"))
+                        return self._send(frame["status"], frame.get("body", {"error": "x"}), frame.get("headers"))
                     body = {"success": True, "signals": frame.get("signals", []),
                             "meta": {"plan": frame.get("plan", "pro")}}
                     if frame.get("plan", "pro") != "pro":
@@ -63,9 +65,10 @@ class FakeApi(object):
                 return self._send(404, {"error": "nope"})
 
             def _send(self, code, body, headers=None):
-                data = json.dumps(body).encode()
+                raw = isinstance(body, str)
+                data = body.encode() if raw else json.dumps(body).encode()
                 self.send_response(code)
-                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Type", "text/html" if raw else "application/json")
                 for k, v in (headers or {}).items():
                     self.send_header(k, str(v))
                 self.send_header("Content-Length", str(len(data)))

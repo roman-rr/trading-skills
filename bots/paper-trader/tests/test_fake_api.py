@@ -1,6 +1,8 @@
 """End-to-end against a fake API: the real HTTP client, loop, state and CSV."""
 import io
+import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -8,9 +10,10 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.dirname(__file__))
 import paper_trader as pt  # noqa: E402
-from fake_api import FakeApi, signal  # noqa: E402
+from fake_api import KEY, FakeApi, signal  # noqa: E402
 
 T0 = pt.parse_ts("2026-10-07T10:05:00Z")  # 5 minutes after the fixtures' createdAt
+BOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "paper_trader.py")
 
 
 class Clock(object):
@@ -70,6 +73,55 @@ class Scenario(unittest.TestCase):
         self.go([{"signals": [signal("s1")]}, {"signals": [], "details": {"s1": expired}}])
         t = self.trades[0]
         self.assertEqual((t["exit_reason"], float(t["exit_price"])), ("expired", 99.0))
+
+    def test_server_stop_beats_later_price_past_target(self):
+        # Asleep (or backing off) while the server booked the stop; by the next
+        # poll the price has moved past the target. That is a stop-out, not a win.
+        stopped = signal("s1", live=95.0, status="failed", sl_hit=True)
+        self.go([{"signals": [signal("s1")]}, {"signals": [], "details": {"s1": stopped}}])
+        self.assertEqual(len(self.trades), 1)
+        t = self.trades[0]
+        self.assertEqual((t["exit_reason"], float(t["exit_price"])), ("stop", 104.0))
+        self.assertLess(float(t["pnl_usd"]), 0)
+
+    def test_expired_without_live_price_frees_the_slot(self):
+        expired = signal("s1", live=None, status="expired")
+        self.go([{"signals": [signal("s1", live=100.5)]}, {"signals": [], "details": {"s1": expired}}])
+        t = self.trades[0]
+        self.assertEqual((t["exit_reason"], float(t["exit_price"])), ("expired", 100.5))
+        self.assertEqual(pt.load_state(self.dir, "all")["positions"], {})
+
+    def test_kill_between_csv_row_and_state_save_does_not_duplicate(self):
+        self.go([{"signals": [signal("s1")]}])  # s1 open, state saved
+        st = pt.load_state(self.dir, "all")
+        # The close row reaches the CSV, then the bot is killed before the state is saved.
+        pt.close_position(st["positions"]["s1"], "target", 96.0, T0, pt.build_parser().parse_args([]), self.dir, st,
+                          lambda msg: None)
+        with open(os.path.join(self.dir, pt.STATE_FILE)) as f:
+            self.assertIn("s1", json.load(f)["positions"])
+        # Restart while s1 is still live and past its target.
+        self.api.frames, self.api.list_calls = [{"signals": [signal("s1", live=95.0)]}], 0
+        out = io.StringIO()
+        env = {"SIGNALS_API_KEY": self.api.key, "SIGNALS_API_BASE": self.api.base}
+        pt.run(["--state-dir", self.dir, "--once"], sleep=self.clock.sleep, now=self.clock.now, out=out, env=env)
+        self.assertNotIn("CLOSE", out.getvalue())
+        self.assertEqual([t["signal_id"] for t in pt.read_trades(self.dir)], ["s1"])
+        self.assertEqual(pt.load_state(self.dir, "all")["positions"], {})
+
+    def test_error_pages_logged_as_one_line(self):
+        page = ("<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n"
+                "<center><h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n")
+        self.go([{"status": 502, "body": page},
+                 {"status": 500, "body": "upstream said:\n  X-Api-Key: %s\n  oops" % KEY},
+                 {"signals": []}])
+        errors = [line for line in self.log.splitlines() if "API error" in line]
+        self.assertEqual(len(errors), 2)
+        self.assertIn("502", errors[0])
+        self.assertIn("retrying in 60s", errors[0])  # the whole message on one line
+        self.assertNotIn("<html", self.log)
+        self.assertNotIn(KEY, self.log)
+        for line in self.log.splitlines():
+            self.assertRegex(line, r"^\d{4}-\d\d-\d\dT")  # every line is a timestamped log line
 
     def test_old_or_already_hit_signals_are_skipped(self):
         self.go([{"signals": [
@@ -172,6 +224,30 @@ class Scenario(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("plan: free", out.getvalue())
         self.assertIn("src=bot", out.getvalue())
+
+
+class LegacyCodePages(unittest.TestCase):
+    """Windows consoles and redirected output often use a legacy code page; the
+    bot must not crash on its own output or on API text (the em dash in the
+    upgrade title), and must leave no lock behind."""
+
+    def bot(self, encoding, *argv):
+        api = FakeApi([{"plan": "free", "signals": [signal("s1", plan="free")]}])
+        self.addCleanup(api.close)
+        d = tempfile.mkdtemp()
+        env = dict(os.environ, PYTHONIOENCODING=encoding, SIGNALS_API_KEY=api.key, SIGNALS_API_BASE=api.base)
+        p = subprocess.run([sys.executable, BOT, "--state-dir", d] + list(argv), env=env,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
+        msg = "%s %s: %s" % (encoding, argv, p.stderr.decode("ascii", "replace"))
+        self.assertEqual(p.returncode, 0, msg)
+        self.assertNotIn(b"Traceback", p.stderr, msg)
+        self.assertFalse(os.path.exists(os.path.join(d, pt.LOCK_FILE)), msg)
+        return p.stdout
+
+    def test_no_crash(self):
+        for enc in ("cp932", "cp949", "cp874", "cp1251", "cp1253", "cp437"):
+            self.assertIn(b"PAPER TRADING ONLY", self.bot(enc, "--once", "--stop-cap", "1.0"))
+            self.assertIn(b"plan: free", self.bot(enc, "--selftest"))
 
 
 if __name__ == "__main__":

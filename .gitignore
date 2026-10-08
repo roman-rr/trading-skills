@@ -10,3 +10,5 @@ node_modules/
 *.swo
 *~
 CLAUDE.md
+__pycache__/
+*.pyc

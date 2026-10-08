@@ -169,7 +169,7 @@ Returns: totalSignals, verifiedSignals, hitRate, avgConfidence, cumulativeROI, a
 | `401 Missing API key` | Include `X-Api-Key` header or `?apiKey=` query param |
 | `401 Invalid or deactivated API key` | Check for typos, or copy the key again from https://signals.x70.ai/dashboard/mcp-key |
 | `429 Rate limit exceeded` | Wait until the time in the `RateLimit-Reset` header; the response says how many calls your plan allows per hour |
-| Empty signals array | No signals in the requested time window — try increasing `days` or using `status=all` |
+| Empty signals array | No live signals match right now. `GET /signals` returns only live (unverified/pending) signals and has no `status` parameter. A larger `days` (max 30) helps on Pro only — free keys always get the last 24 hours. For resolved signals use MCP `get_signal_history` |
 | `500 Internal server error` | Temporary issue — retry after a few seconds |
 
 ## Pricing

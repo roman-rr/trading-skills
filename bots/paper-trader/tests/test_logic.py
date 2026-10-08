@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import paper_trader as pt  # noqa: E402
@@ -30,6 +31,32 @@ class Exits(unittest.TestCase):
         self.assertEqual(pt.capped_stop("short", 100, 109, 96, None), 109)
 
 
+class ServerVerdict(unittest.TestCase):
+    POS = {"side": "short", "fill": 100.5, "stop": 104.0, "target": 96.0, "last_price": 101.0}
+
+    @staticmethod
+    def sig(status, live, tp=False, sl=False):
+        return {"livePrice": live, "verification": {"status": status, "takeProfitHit": tp, "stopLossHit": sl}}
+
+    def test_verdict_beats_later_price(self):
+        # After a gap: the server booked the stop, the price is now past the target (and vice versa).
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("failed", 95.0, sl=True)), ("stop", 104.0))
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("success", 110.0, tp=True)), ("target", 96.0))
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("success", 95.0, tp=True, sl=True)), ("stop", 104.0))
+
+    def test_expired_is_terminal(self):
+        self.assertIn("expired", pt.TERMINAL)
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("expired", None)), ("expired", 101.0))
+        self.assertEqual(pt.decide_exit(dict(self.POS, last_price=None), self.sig("expired", None)), ("expired", 100.5))
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("failed", 99.0)), ("expired", 101.0))  # no level hit
+
+    def test_unresolved_judged_on_price(self):
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("pending", 95.0)), ("target", 96.0))
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("pending", 110.0)), ("stop", 110.0))
+        self.assertIsNone(pt.decide_exit(self.POS, self.sig("pending", None)))
+        self.assertIsNone(pt.decide_exit(self.POS, self.sig("unverified", 100.0)))
+
+
 class Pnl(unittest.TestCase):
     def test_long_and_short_with_fees(self):
         net, fees, pct = pt.pnl("long", 100.0, 110.0, 100.0, 4.5)
@@ -50,6 +77,14 @@ class Pnl(unittest.TestCase):
 
     def test_timestamps(self):
         self.assertEqual(pt.parse_ts("2026-10-07T10:00:00.000Z"), pt.parse_ts("2026-10-07T10:00:00+00:00"))
+
+    def test_error_body_one_line(self):
+        page = ("<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body>\r\n"
+                "<center><h1>502 Bad Gateway</h1></center>\r\n</body>\r\n</html>\r\n")
+        self.assertEqual(pt.one_line(page), "502 Bad Gateway")
+        self.assertEqual(pt.one_line("<!DOCTYPE html>\n<html><body>oops</body></html>"), "")
+        self.assertEqual(pt.one_line('{"error":\n  "Invalid   key"}'), '{"error": "Invalid key"}')
+        self.assertEqual(len(pt.one_line("x " * 500)), 120)
 
 
 class StateAndFiles(unittest.TestCase):
@@ -79,6 +114,15 @@ class StateAndFiles(unittest.TestCase):
         self.assertEqual(s["win_rate"], 33.3)
         self.assertEqual(s["positive_days_pct"], 50.0)
 
+    def test_position_already_in_csv_is_dropped_on_load(self):
+        # Killed after the close row was written, before the state was saved.
+        st = pt.new_state("all")
+        st["positions"] = {"s1": {"id": "s1"}, "s2": {"id": "s2"}}
+        pt.save_state(self.dir, st, 0)
+        pt.append_trade(self.dir, dict({k: "" for k in pt.CSV_FIELDS}, signal_id="s1",
+                                       closed_at="2026-10-07T10:00:00Z", pnl_usd=1.0, pnl_pct=1.0))
+        self.assertEqual(set(pt.load_state(self.dir, "all")["positions"]), {"s2"})
+
     def test_lock(self):
         self.assertIsNone(pt.acquire_lock(self.dir))
         with open(os.path.join(self.dir, pt.LOCK_FILE), "w") as f:
@@ -102,6 +146,31 @@ class Cli(unittest.TestCase):
         code = pt.run(["--selftest"], out=out, env={"SIGNALS_API_KEY": "k", "SIGNALS_API_BASE": "http://evil.example"})
         self.assertEqual(code, pt.EXIT_ARGS)
 
+    def test_lock_race_message(self):
+        out = io.StringIO()
+        with mock.patch.object(pt, "acquire_lock", return_value=-1):
+            code = pt.run(["--once", "--state-dir", tempfile.mkdtemp()], out=out, env={"SIGNALS_API_KEY": "k"})
+        self.assertEqual(code, pt.EXIT_LOCKED)
+        self.assertNotIn("pid -1", out.getvalue())
+        self.assertIn("Try again", out.getvalue())
+
+    def test_crash_after_lock_releases_it(self):
+        d = tempfile.mkdtemp()
+        with open(os.path.join(d, pt.STATE_FILE), "w") as f:
+            json.dump({"version": 99}, f)
+        with self.assertRaises(SystemExit):  # bad state file
+            pt.run(["--once", "--state-dir", d], out=io.StringIO(), env={"SIGNALS_API_KEY": "k"})
+        self.assertFalse(os.path.exists(os.path.join(d, pt.LOCK_FILE)))
+
+        class Unprintable(io.StringIO):  # e.g. a console code page that can't encode a character
+            def write(self, s):
+                raise UnicodeEncodeError("cp932", s, 0, 1, "illegal multibyte sequence")
+
+        d = tempfile.mkdtemp()
+        with self.assertRaises(UnicodeEncodeError):
+            pt.run(["--once", "--state-dir", d], out=Unprintable(), env={"SIGNALS_API_KEY": "k"})
+        self.assertFalse(os.path.exists(os.path.join(d, pt.LOCK_FILE)))
+
     def test_report_without_key(self):
         out = io.StringIO()
         self.assertEqual(pt.run(["--report", "--json", "--state-dir", tempfile.mkdtemp()], out=out, env={}), 0)
@@ -116,7 +185,8 @@ class Cli(unittest.TestCase):
                 mods.update(a.name.split(".")[0] for a in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 mods.add(node.module.split(".")[0])
-        stdlib = {"argparse", "csv", "json", "os", "random", "signal", "sys", "time", "urllib", "datetime", "ctypes"}
+        stdlib = {"argparse", "csv", "json", "os", "random", "re", "signal", "sys", "time", "urllib", "datetime",
+                  "ctypes"}
         self.assertEqual(mods - stdlib, set())
 
 
