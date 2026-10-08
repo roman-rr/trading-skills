@@ -1,14 +1,10 @@
 # Trading Signals
 
-> **⭐ Enjoying free signals? Push STAR to keep them free — it directly supports higher accuracy and continued development!**
-
 ![Trading Signals for AI Agents](https://signals.x70.ai/banner.jpg)
 
 `17 triggers. 44 algorithms. 3 AI experts. Every signal backed by causal reasoning and verified against real prices.`
 
-Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30+ AI agents. Every signal includes entry, SL, TP, leverage, position size, and a full transmission chain showing exactly which data points led to the trade.
-
-**FREE during beta.** More stars = more development time = better signals for everyone.
+Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30+ AI agents. Every signal comes with its reasoning — a transmission chain showing exactly which data points led to the trade — and is verified against real prices. **Pro** adds the trade levels: entry, stop-loss, take-profit, leverage and position size. See [Pricing](#pricing).
 
 ## Install
 
@@ -26,7 +22,7 @@ npx skills add roman-rr/trading-skills
 
 ### MCP Server (Claude, Cursor, Codex, VS Code)
 
-Works without a key (3-signal preview). For the full feed, get a free key at https://signals.x70.ai/mcp-signup — the [API Key page](https://signals.x70.ai/dashboard/mcp-key) has copy-paste setup for every client.
+Works without a key (3-signal preview). For the full feed, get a free key at https://signals.x70.ai/mcp-signup?utm_content=github-readme — the [API Key page](https://signals.x70.ai/dashboard/mcp-key?utm_source=github&utm_medium=readme) has copy-paste setup for every client.
 
 **Claude Code**
 
@@ -107,6 +103,8 @@ Every algorithm is grounded in peer-reviewed research from quantitative finance,
 
 ## Signal Preview
 
+Example rows — not live data. Entry, SL, TP and leverage are returned on Pro; the free plan returns coin, direction, confidence and the reasoning.
+
 | Coin | Dir | Conf | Entry | SL | TP | Lev | R/R | Type |
 |------|-----|------|-------|----|----|-----|-----|------|
 | BTC | Bull | 87% | $68,450 | $67,200 | $71,800 | 3x | 2.7 | momentum_shift |
@@ -134,12 +132,21 @@ Once installed, ask your AI agent:
 
 ## Pricing
 
-**FREE during beta** -- no charges, no credit card.
+| | No key | Free key | Pro |
+|---|---|---|---|
+| Signals | 3-signal preview | every live signal — coin, direction, confidence, reasoning | everything in Free **+ entry, stop-loss, take-profit, leverage, position size** |
+| History | — | 24 hours | 30 days |
+| Rate limit | 30 calls/hour per IP | 300 calls/hour | effectively unlimited |
+| Price | free | free | **$35/month** or $300/year |
+
+New accounts get a **14-day Pro trial — no card**. Nothing is charged unless you subscribe. [Pricing & sign-up](https://signals.x70.ai/pricing?utm_source=github&utm_medium=readme)
 
 ## Contributing
 
 Issues, feature requests, and PRs are welcome. Please open an issue first to discuss changes.
 
+If this is useful, a ⭐ helps other people find it.
+
 ## License
 
-**Proprietary** -- Free API during beta. Paid license required for commercial redistribution. See [LICENSE.txt](LICENSE.txt).
+**Proprietary** — the source is readable; a paid license is required for commercial redistribution. See [LICENSE.txt](LICENSE.txt).

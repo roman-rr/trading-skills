@@ -1,7 +1,7 @@
 {
   "name": "trading-skills",
-  "version": "1.0.0",
-  "description": "Trading Skills — live AI crypto trading signals with entry, SL, TP, leverage, confidence, verification with P&L tracking. Free during beta.",
+  "version": "1.1.0",
+  "description": "Trading Skills — live AI crypto trading signals with reasoning, confidence and verified outcomes. Free key for every signal; Pro adds entry, SL, TP and leverage.",
   "author": {
     "name": "roman-rr",
     "email": "romwtb@gmail.com"
