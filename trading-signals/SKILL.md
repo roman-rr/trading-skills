@@ -120,7 +120,7 @@ too and return a 3-signal preview.
 ### GET /signals
 
 ```bash
-curl "https://signals.x70.ai/api/skill/signals?status=active&limit=10" \
+curl "https://signals.x70.ai/api/skill/signals?limit=10" \
   -H "X-Api-Key: ask_YOUR_KEY"
 ```
 
@@ -130,7 +130,7 @@ curl "https://signals.x70.ai/api/skill/signals?status=active&limit=10" \
 | days | 7 | Lookback window (1-30 days) |
 | coin | — | Filter by coin symbol (e.g. BTC, ETH) |
 
-Returns only live signals (unverified + pending) sorted by live PnL (most profitable first). Each signal includes `livePrice`, `livePnlPct`, and `transmissionChain`. Resolved signals are not included — use `/signals/history` or MCP `get_signal_history` for those.
+Returns only live signals (unverified + pending) sorted by live PnL (most profitable first). Each signal includes `livePrice`, `livePnlPct`, and `transmissionChain`. Resolved signals are not included — use MCP `get_signal_history`, or `GET /signals/:id` for one signal (live or resolved).
 
 ### GET /signals/:id
 
