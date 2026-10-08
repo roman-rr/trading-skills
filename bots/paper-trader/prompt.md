@@ -30,7 +30,7 @@ Steps (on Windows, use the PowerShell form given after a step):
 4. Verify it before running anything:
    `python3 -c "import hashlib;print(hashlib.sha256(open('paper_trader.py','rb').read()).hexdigest())"`
    Windows: `(Get-FileHash paper_trader.py -Algorithm SHA256).Hash.ToLower()`
-   It must print `SHA256_TBD`. If it doesn't, delete the file, tell me, and stop.
+   It must print `36269398fe14cb96841e747321bb59372bc7ebe690784fd53ff7af8b417d7e30`. If it doesn't, delete the file, tell me, and stop.
 5. If `SIGNALS_API_KEY` is not set, stop and ask me to set it (the key is at
    https://signals.x70.ai/dashboard/mcp-key) with
    `export SIGNALS_API_KEY=<my key>` (Windows: `$env:SIGNALS_API_KEY = "<my key>"`)
