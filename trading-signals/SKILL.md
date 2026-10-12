@@ -73,7 +73,8 @@ Follow this workflow when a user asks for trading signals:
 
 1. **Check performance first**: `get_stats` (or `GET /api/skill/stats?days=30`) to assess current reliability — works without a key
 2. **Fetch active signals**: `get_signals` (or `GET /api/skill/signals`) for live setups
-3. **If levels come back `null`**: that is the free plan, not an error — entry/SL/TP require Pro. The response carries an `upgrade` object (REST) or `announcement` (MCP) with an `upgradeUrl`; show that link if the user wants the levels. No key yet? Point them to https://signals.x70.ai/mcp-signup
+3. **If levels come back `null`**: that is the free plan, not an error — entry/SL/TP require Pro. The response carries an `upgrade` object (REST) or `announcement` (MCP) with a `subscribeUrl` (straight to checkout, no sign-in) and an `upgradeUrl`; show it if the user wants the levels. No key yet? Point them to https://signals.x70.ai/mcp-signup
+   - **Account notices**: if a response has a `notice` (REST) or an `announcement` with `type: "trial_ending"` (MCP), tell the user its `message` — their free Pro trial is about to end and the levels will go `null`.
 4. **Filter**: by the user's preferred coins or direction. Don't present confidence as a ranking of expected profit — show it as one attribute among others
 5. **Present to user**: Show as a table with coin, direction, confidence, and — on Pro — entry, SL, TP, leverage, R/R
 6. **Monitor verification**: Re-fetch signals later to check if TP/SL was hit
