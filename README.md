@@ -20,32 +20,38 @@ Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30
 npx skills add roman-rr/trading-skills
 ```
 
-### MCP Server (Claude, Cursor, Codex, VS Code)
+### MCP Server (Claude, Cursor, VS Code, Codex)
 
-Works without a key (3-signal preview). For the full feed, get a free key at https://signals.x70.ai/mcp-signup?utm_content=github-readme — the [API Key page](https://signals.x70.ai/dashboard/mcp-key?utm_source=github&utm_medium=readme) has copy-paste setup for every client.
+**Sign in from your agent (recommended).** Add the URL below and your client opens a browser page where you sign in or create a free account — 14 days of Pro, no card — and click **Allow**. No key to copy.
 
 **Claude Code**
 
 ```bash
-claude mcp add --transport http trading-signals https://signals.x70.ai/mcp
-# with a key:
-claude mcp add --transport http trading-signals https://signals.x70.ai/mcp --header "X-Api-Key: YOUR_KEY"
+claude mcp add --transport http trading-signals https://signals.x70.ai/mcp/connect
+# then in Claude Code: /mcp → trading-signals → Authenticate
 ```
 
-**Claude app (Desktop & claude.ai)** — Customize → Connectors → *Add custom connector*, URL `https://signals.x70.ai/mcp`. Connectors have no header field, so with a key use `https://signals.x70.ai/mcp?apiKey=YOUR_KEY`.
+**Claude app (Desktop & claude.ai)** — Customize → Connectors → *Add custom connector*, URL `https://signals.x70.ai/mcp/connect`.
 
 **Cursor** (`~/.cursor/mcp.json`)
 
 ```json
 {
   "mcpServers": {
-    "trading-signals": {
-      "url": "https://signals.x70.ai/mcp",
-      "headers": { "X-Api-Key": "YOUR_KEY" }
-    }
+    "trading-signals": { "url": "https://signals.x70.ai/mcp/connect" }
   }
 }
 ```
+
+**Try it without an account:** use `https://signals.x70.ai/mcp` instead — 3 live signals plus the verified hit rate. When you ask for more, your client offers to sign in.
+
+**With an API key** (Codex, scripts, clients that can't sign in) — get a free key at https://signals.x70.ai/mcp-signup?utm_content=github-readme; the [API Key page](https://signals.x70.ai/dashboard/mcp-key?utm_source=github&utm_medium=readme) has copy-paste setup for every client.
+
+```bash
+claude mcp add --transport http trading-signals https://signals.x70.ai/mcp --header "X-Api-Key: YOUR_KEY"
+```
+
+Claude app with a key: `https://signals.x70.ai/mcp?apiKey=YOUR_KEY` (connectors have no header field).
 
 **Codex** (`~/.codex/config.toml`, key in env var `SIGNALS_API_KEY`)
 
