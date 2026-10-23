@@ -6,6 +6,8 @@
 
 Live crypto trading signals for Claude Code, OpenAI Codex, Cursor, Windsurf & 30+ AI agents. Every signal comes with its reasoning — a transmission chain showing exactly which data points led to the trade — and is verified against real prices. **Pro** adds the trade levels: entry, stop-loss, take-profit, leverage and position size. See [Pricing](#pricing).
 
+Updates, new features and how-tos: follow [@x70signals on X](https://x.com/x70signals).
+
 ## Install
 
 ### Claude Code Plugin (recommended)
