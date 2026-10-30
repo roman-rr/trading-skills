@@ -138,6 +138,12 @@ Once installed, ask your AI agent:
 - *"Build me a Python script that fetches crypto signals and alerts me on Telegram"*
 - *"Show me verified signals from the last week -- what hit TP?"*
 
+## Paper-trade it first
+
+Want to see how the signals do before you trade them? Let your agent run the [paper-trading bot](bots/paper-trader) on your machine. It takes each new signal as a $100 paper position at the live price, charges fees on both sides, and logs every trade, wins and losses, to a CSV you own. No real orders, no exchange account; one Python file, standard library only.
+
+The [API Key page](https://signals.x70.ai/dashboard/mcp-key?utm_source=github&utm_medium=readme#paper-bot) has a ready prompt for Claude Code, Codex or Cursor, with your key filled in. Our own copy has been running since Oct 7: [its live record](https://signals.x70.ai/?utm_source=github&utm_medium=readme#paper-bot).
+
 ## Pricing
 
 | | No key | Free key | Pro |
