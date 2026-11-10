@@ -1,0 +1,9 @@
+{
+  "name": "trading-signals",
+  "version": "1.2.0",
+  "mcpServers": {
+    "trading-signals": {
+      "httpUrl": "https://signals.x70.ai/mcp/connect"
+    }
+  }
+}
