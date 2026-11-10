@@ -138,6 +138,14 @@ Once installed, ask your AI agent:
 - *"Build me a Python script that fetches crypto signals and alerts me on Telegram"*
 - *"Show me verified signals from the last week -- what hit TP?"*
 
+## Track record
+
+October 2026, every signal we published, losses included:
+
+[![October 2026 scoreboard: 1,595 signals, 74.7% hit their target or closed in profit, +1.41% per signal after fees, 401 losses](https://signals.x70.ai/scoreboard/2026-10.png)](https://signals.x70.ai/?utm_source=github&utm_medium=readme#scoreboard)
+
+1,595 signals: 74.7% hit their target or closed in profit, +1.41% per signal on average after fees and without leverage; 401 lost. Almost all were shorts in a month BTC fell 7.3%, so this is a falling-market result. We post rally months the same way. Per signal: the target or stop when hit, else the close, minus 0.12% fees. Past results don't guarantee future results.
+
 ## Paper-trade it first
 
 Want to see how the signals do before you trade them? Let your agent run the [paper-trading bot](bots/paper-trader) on your machine. It takes each new signal as a $100 paper position at the live price, charges fees on both sides, and logs every trade, wins and losses, to a CSV you own. No real orders, no exchange account; one Python file, standard library only.
