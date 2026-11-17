@@ -74,6 +74,7 @@
   ],
   "returned": 2,
   "totalMatching": 2,
+  "sortedBy": "livePnlPct, best first (the best-performing open signals lead; totalMatching counts them all)",
   "filtersApplied": {},
   "meta": {
     "plan": "pro",

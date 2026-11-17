@@ -50,7 +50,10 @@ Steps (on Windows, use the PowerShell form given after a step):
      ask whether to start it anyway.
 7. Start it in the background:
    `nohup python3 paper_trader.py >> paper_trader.log 2>&1 &`
-   (Windows PowerShell: `Start-Process python -ArgumentList 'paper_trader.py' -RedirectStandardOutput paper_trader.log -WindowStyle Hidden`)
+   Windows PowerShell, with the interpreter that worked in step 1:
+   `Start-Process py -ArgumentList '-3','paper_trader.py' -RedirectStandardOutput paper_trader.log -WindowStyle Hidden`
+   or, if only `python` worked:
+   `Start-Process python -ArgumentList 'paper_trader.py' -RedirectStandardOutput paper_trader.log -WindowStyle Hidden`
 8. Wait a few seconds, then show me the last lines of `paper_trader.log`.
 9. Finish by telling me, in plain words:
    - it's paper trading only — no real orders;

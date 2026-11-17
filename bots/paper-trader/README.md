@@ -14,6 +14,11 @@ expires), and logs every trade — wins and losses — to a CSV you own.
   exit, not a price seen later: a stop-out books at the stop (also when both
   levels were hit), a target hit at the target, and an expired signal at the
   last live price the bot observed.
+- **No unconfirmed wins.** With `--stop-cap` the bot's stop is tighter than the
+  signal's own, and the server only judges the signal's stop. If the bot went
+  more than two polls without seeing a price (asleep, offline, backing off) and
+  the server then reports the target, the trade closes at the last price the
+  bot saw, with exit reason `unverified`, instead of booking a win it can't confirm.
 
 > Signals can be wrong, and past results don't predict future results. Paper
 > results leave out things real trading has, such as slippage beyond the
@@ -76,7 +81,16 @@ tracking positions it already opened.
 | `--report [--json]` | | results from the CSV, exit |
 
 Presets are public API filters — the same ones the Signals MCP tools and REST
-API accept — so you can reproduce anything the bot does:
+API accept — so you can reproduce anything the bot does. Confidence filters are
+on a 0–1 scale (`0.70` is the `70` you see in a signal's `confidence` field);
+the REST API also accepts 0–100.
+
+One folder holds one preset: its CSV and `--report` are labelled with it, so
+starting the bot there with a different `--preset` is refused. Use another
+`--state-dir` to run a second preset.
+
+The bot polls `GET /signals?sort=newest&limit=100`, so a fresh signal is always
+in the page even when more than 100 are live.
 
 | Preset | Filter |
 |---|---|
@@ -88,7 +102,9 @@ API accept — so you can reproduce anything the bot does:
 ## Files
 
 `paper_state.json` (open positions, written atomically), `paper_trades.csv`
-(one row per closed trade), `paper_trader.lock` (PID of the running bot — a
+(one row per closed trade; `exit_reason` is `target`, `stop`, `expired`,
+`unverified` or `vanished` — the signal disappeared or its detail stayed
+unreadable for 12 polls), `paper_trader.lock` (PID of the running bot — a
 second copy in the same folder exits instead of double-trading).
 
 ## Exit codes

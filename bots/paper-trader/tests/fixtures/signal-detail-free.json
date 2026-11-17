@@ -44,7 +44,7 @@
       "entryPrice, stopLoss, takeProfit, leverage (currently null on free)",
       "riskRewardRatio + positionSize",
       "30-day history depth (free: 24h)",
-      "No rate limit (free: 300/hr)"
+      "10,000 requests/hour (free: 300/hr)"
     ],
     "price": "Pro: $35/month or $300/year. Cancel anytime.",
     "upgradeUrl": "https://signals.x70.ai/api/go/upgrade?src=rest&kid=0123456789abcdef01234567"
