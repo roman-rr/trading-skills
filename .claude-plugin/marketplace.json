@@ -1,0 +1,14 @@
+{
+  "name": "trading-skills",
+  "description": "Signals (signals.x70.ai): live AI crypto trading signals for agents.",
+  "owner": {
+    "name": "roman-rr"
+  },
+  "plugins": [
+    {
+      "name": "trading-skills",
+      "source": "./",
+      "description": "Live AI crypto trading signals with reasoning, confidence and verified outcomes. Free key for every signal; Pro adds entry, SL, TP and leverage."
+    }
+  ]
+}

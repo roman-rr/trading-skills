@@ -44,6 +44,16 @@ class ServerVerdict(unittest.TestCase):
         self.assertEqual(pt.decide_exit(self.POS, self.sig("success", 110.0, tp=True)), ("target", 96.0))
         self.assertEqual(pt.decide_exit(self.POS, self.sig("success", 95.0, tp=True, sl=True)), ("stop", 104.0))
 
+    def test_capped_stop_does_not_book_an_unwatched_target(self):
+        # --stop-cap: the server judges the signal's own, wider stop. After a gap the bot
+        # can't know its tighter stop held, so it closes at the last price it saw.
+        capped = dict(self.POS, capped=True)
+        self.assertEqual(pt.decide_exit(capped, self.sig("success", 95.0, tp=True), unwatched=True), ("unverified", 101.0))
+        self.assertEqual(pt.decide_exit(capped, self.sig("success", 95.0, tp=True), unwatched=False), ("target", 96.0))
+        self.assertEqual(pt.decide_exit(capped, self.sig("failed", 95.0, sl=True), unwatched=True), ("stop", 104.0))
+        # an uncapped position trusts the server's target even after a gap
+        self.assertEqual(pt.decide_exit(self.POS, self.sig("success", 95.0, tp=True), unwatched=True), ("target", 96.0))
+
     def test_expired_is_terminal(self):
         self.assertIn("expired", pt.TERMINAL)
         self.assertEqual(pt.decide_exit(self.POS, self.sig("expired", None)), ("expired", 101.0))

@@ -205,6 +205,38 @@ class Scenario(unittest.TestCase):
         self.assertEqual(q["primaryTrigger"], ["trend_trending_down"])
         self.assertEqual(q["confidenceMin"], ["0.70"])
 
+    def test_poll_asks_for_newest_first(self):
+        self.go([{"signals": [signal("s1")]}])
+        self.assertEqual(self.api.requests[0]["query"]["sort"], ["newest"])
+        self.assertEqual(self.api.requests[0]["query"]["limit"], ["100"])
+
+    def test_switching_preset_in_the_same_folder_is_refused(self):
+        self.go([{"signals": [signal("s1")]}])                      # first run: preset all
+        out = io.StringIO()
+        env = {"SIGNALS_API_KEY": self.api.key, "SIGNALS_API_BASE": self.api.base}
+        code = pt.run(["--state-dir", self.dir, "--once", "--preset", "trend-down"], sleep=self.clock.sleep,
+                      now=self.clock.now, out=out, env=env)
+        self.assertEqual(code, pt.EXIT_ARGS)
+        self.assertIn("recorded with --preset all, not trend-down", out.getvalue())
+        self.assertFalse(os.path.exists(os.path.join(self.dir, pt.LOCK_FILE)))   # lock released
+        code = pt.run(["--state-dir", self.dir, "--once"], sleep=self.clock.sleep, now=self.clock.now,
+                      out=io.StringIO(), env=env)
+        self.assertEqual(code, 0)                                    # the original preset still runs
+
+    def test_unreadable_detail_does_not_hold_a_slot_forever(self):
+        frames = [{"signals": [signal("s1", live=100.5)]}] + [{"signals": [], "details": {"s1": {}}}] * pt.MAX_DETAIL_MISSES
+        self.go(frames)
+        self.assertEqual([t["exit_reason"] for t in self.trades], ["vanished"])
+        self.assertEqual(float(self.trades[0]["exit_price"]), 100.5)   # the last price the bot saw
+
+    def test_capped_stop_after_a_gap_closes_unverified(self):
+        won = signal("s1", stop=109.0, target=96.0, live=95.0, status="success", tp_hit=True)
+        self.go([{"signals": [signal("s1", stop=109.0, target=96.0, live=100.5)]},
+                 {"status": 500}, {"status": 500}, {"status": 500},      # backoff: the bot isn't watching
+                 {"signals": [], "details": {"s1": won}}], "--stop-cap", "1.0")
+        self.assertEqual([t["exit_reason"] for t in self.trades], ["unverified"])
+        self.assertEqual(float(self.trades[0]["exit_price"]), 100.5)
+
     def test_stop_cap_applied(self):
         self.go([{"signals": [signal("s1", stop=109.0, target=96.0)]}], "--stop-cap", "1.0")
         self.assertIn("stop 104.0", self.log)

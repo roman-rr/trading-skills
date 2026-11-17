@@ -43,7 +43,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 REPO_URL = "https://github.com/roman-rr/trading-skills/tree/main/bots/paper-trader"
 USER_AGENT = "signals-paper-trader/%s (+https://github.com/roman-rr/trading-skills)" % VERSION
 DEFAULT_BASE = "https://signals.x70.ai"
@@ -53,6 +53,9 @@ STATE_FILE, TRADES_FILE, LOCK_FILE = "paper_state.json", "paper_trades.csv", "pa
 SEEN_TTL_S = 35 * 86400
 SKIP_REPORT_EVERY_S = 6 * 3600
 TERMINAL = ("success", "failed", "expired")
+# A position whose signal detail keeps coming back unreadable is closed as
+# "vanished" after this many checks in a row, so it can't hold a slot forever.
+MAX_DETAIL_MISSES = 12
 
 EXIT_OK, EXIT_ARGS, EXIT_AUTH, EXIT_FORMAT, EXIT_LOCKED = 0, 2, 3, 4, 5
 
@@ -66,6 +69,8 @@ REQUIRED_DETAIL = ("success", "signal")
 
 # Presets are plain public API filters, so anything the bot does you can
 # reproduce with the API or MCP tools yourself.
+# Confidence filters are on a 0-1 scale here (0.70 = the 70 shown in the
+# `confidence` field); the API accepts either scale.
 PRESETS = {
     "all": {},
     "trend-down": {"primaryTrigger": "trend_trending_down", "confidenceMin": "0.70",
@@ -179,16 +184,26 @@ def exit_for_price(side, stop, target, price):
     return None
 
 
-def decide_exit(pos, sig):
+def decide_exit(pos, sig, unwatched=False, seen_before=None):
     """(reason, fill) to close an open position at, or None to keep it.
     The server's verdict comes first: after a sleep or backoff gap the price
     seen now may have crossed the target although the server already booked
-    the stop (or the reverse). Only an unresolved signal is judged on price."""
+    the stop (or the reverse). Only an unresolved signal is judged on price.
+
+    `unwatched`: the bot went longer than two polls without seeing this
+    position's price. With --stop-cap the bot's stop is tighter than the
+    signal's, and the server only judges the signal's own stop, so a target
+    booked by the server may have come after the capped stop was crossed
+    unseen. Such a position closes at the last price the bot saw before the
+    gap (`seen_before`), as "unverified", instead of booking a win it can't
+    confirm."""
     ver = sig.get("verification") or {}
     if ver.get("status") in TERMINAL:
         if ver.get("stopLossHit"):  # stop first if both were hit
             return "stop", pos["stop"]
         if ver.get("takeProfitHit"):
+            if pos.get("capped") and unwatched:
+                return "unverified", seen_before or pos.get("last_price") or pos["fill"]
             return "target", pos["target"]
         # Expired, or resolved at the end of its window with neither level hit.
         return "expired", pos.get("last_price") or pos["fill"]
@@ -480,6 +495,13 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
     max_loops = 1 if args.once else args.max_loops
     try:
         st = load_state(state_dir, args.preset)
+        if st.get("preset") != args.preset:
+            # Filters come from --preset, but the CSV and --report are labelled
+            # with the preset in the state file: mixing two would mislabel
+            # every trade and blend two strategies into one result.
+            out.write("This folder's trades were recorded with --preset %s, not %s. Run with --preset %s, or "
+                      "use another --state-dir for %s.\n" % (st.get("preset"), args.preset, st.get("preset"), args.preset))
+            return EXIT_ARGS
         for sig_name in ("SIGINT", "SIGTERM"):
             if hasattr(signal, sig_name):
                 try:
@@ -496,7 +518,10 @@ def run(argv=None, sleep=time.sleep, now=time.time, out=None, env=None):
             loops += 1
             delay, jitter = interval, True
             try:
-                body = api.get("/api/skill/signals", dict(filters, limit=100, days=30))
+                # sort=newest: by creation time, so a fresh signal is always in
+                # the first 100 even when more than 100 are live (the default
+                # order is live PnL, where a new signal sits near the bottom).
+                body = api.get("/api/skill/signals", dict(filters, limit=100, days=30, sort="newest"))
                 miss = missing_fields(body, REQUIRED_LIST) + [
                     f for s in body.get("signals") or [] for f in missing_fields(s, REQUIRED_SIGNAL)]
                 if miss:
@@ -573,12 +598,21 @@ def tick(api, body, st, args, state_dir, now, say):
                     close_position(pos, "vanished", pos["last_price"], now_s, args, state_dir, st, say)
                     continue
                 raise
-        if sig is None:
+        if not sig:
+            # The detail came back without the fields the bot needs. Keep the
+            # position for now, but not forever: it still counts toward --max-open.
+            pos["misses"] = pos.get("misses", 0) + 1
+            if pos["misses"] >= MAX_DETAIL_MISSES:
+                close_position(pos, "vanished", pos.get("last_price") or pos["fill"], now_s, args, state_dir, st, say)
             continue
+        pos["misses"] = 0
+        unwatched = now_s - pos.get("seen_at", now_s) > 2 * max(60, args.interval) * 1.1
+        pos["seen_at"] = now_s
+        seen_before = pos.get("last_price")
         price = num(sig.get("livePrice"))
         if price is not None:
             pos["last_price"] = price
-        hit = decide_exit(pos, sig)
+        hit = decide_exit(pos, sig, unwatched, seen_before)
         if hit:
             close_position(pos, hit[0], hit[1], now_s, args, state_dir, st, say)
 
@@ -622,12 +656,14 @@ def tick(api, body, st, args, state_dir, now, say):
         if len(st["positions"]) >= args.max_open:
             continue
         side = side_of(sig.get("direction"))
+        signal_stop = stop
         stop = capped_stop(side, entry, stop, target, args.stop_cap)
         if exit_for_price(side, stop, target, price):
             continue  # already past its stop or target — too late to enter honestly
         st["positions"][sid] = {"id": sid, "coin": sig.get("coin"), "side": side, "signal_entry": entry,
                                 "fill": price, "stop": stop, "target": target, "notional": args.notional,
-                                "opened_at": now_s, "last_price": price}
+                                "opened_at": now_s, "last_price": price, "seen_at": now_s,
+                                "capped": stop != signal_stop}
         say("OPEN  %-6s %-5s @ %s (signal entry %s) stop %s target %s" % (sig.get("coin"), side, price, entry,
                                                                             stop, target))
 

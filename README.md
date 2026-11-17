@@ -13,7 +13,8 @@ Updates, new features and how-tos: follow [@x70signals on X](https://x.com/x70si
 ### Claude Code Plugin (recommended)
 
 ```bash
-/plugin install roman-rr/trading-skills
+/plugin marketplace add roman-rr/trading-skills
+/plugin install trading-skills@trading-skills
 ```
 
 ### npx (Claude Code, Codex, Cursor, Windsurf, etc.)
@@ -100,12 +101,12 @@ Every algorithm is grounded in peer-reviewed research from quantitative finance,
 
 | Feature | Description |
 |---------|-------------|
-| Live signals | Bullish/bearish with full trade setup -- entry, SL, TP, leverage, position size |
+| Live signals | Bullish/bearish with reasoning on every plan; the trade setup (entry, SL, TP, leverage, position size) is Pro-only |
 | Transmission chains | 2-4 causal reasoning steps per signal with specific data points |
 | 50+ coins | Dynamically selected from top volume, funding, and OI on Hyperliquid perps |
-| Confidence score | 0-100 AI conviction level per signal |
+| Confidence score | 0-100: the model's own conviction per signal (not a calibrated probability) |
 | Auto-verification | Every signal tracked against real prices -- TP/SL monitoring every minute |
-| Paper trading P&L | Real trades on a virtual account with optimal position sizing |
+| Paper trading P&L | Paper trades on a virtual account: every signal as a simulated position, fees included |
 | Dynamic risk control | Confidence-based leverage caps, volatility-calibrated SL, automatic regime detection |
 | Performance stats | Hit rate, cumulative ROI, profit factor, breakdown by direction/coin/model |
 
@@ -156,9 +157,9 @@ The [API Key page](https://signals.x70.ai/dashboard/mcp-key?utm_source=github&ut
 
 | | No key | Free key | Pro |
 |---|---|---|---|
-| Signals | 3-signal preview | every live signal — coin, direction, confidence, reasoning | everything in Free **+ entry, stop-loss, take-profit, leverage, position size** |
+| Signals | 3-signal preview | every live signal (up to 100 per request) — coin, direction, confidence, reasoning | everything in Free **+ entry, stop-loss, take-profit, leverage, position size** |
 | History | — | 24 hours | 30 days |
-| Rate limit | 30 calls/hour per IP | 300 calls/hour | effectively unlimited |
+| Rate limit | 30 calls/hour per IP | 300 calls/hour | 10,000 calls/hour |
 | Price | free | free | **$35/month** or $300/year |
 
 New accounts get a **14-day Pro trial — no card**. Nothing is charged unless you subscribe. [Pricing & sign-up](https://signals.x70.ai/pricing?utm_source=github&utm_medium=readme)

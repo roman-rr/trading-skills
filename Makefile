@@ -3,11 +3,12 @@ SKILL_DIRS := $(shell find . -maxdepth 2 -name 'SKILL.md' -exec dirname {} \;)
 .PHONY: link unlink build clean
 
 link:
+	@mkdir -p ~/.claude/skills ~/.codex/skills
 	@for dir in $(SKILL_DIRS); do \
 		name=$$(basename $$dir); \
 		echo "Linking $$name..."; \
-		ln -sfn $$(pwd)/$$dir ~/.claude/skills/$$name 2>/dev/null || true; \
-		ln -sfn $$(pwd)/$$dir ~/.codex/skills/$$name 2>/dev/null || true; \
+		ln -sfn $$(pwd)/$$dir ~/.claude/skills/$$name || exit 1; \
+		ln -sfn $$(pwd)/$$dir ~/.codex/skills/$$name || exit 1; \
 	done
 	@echo "Done. Skills linked to ~/.claude/skills/ and ~/.codex/skills/"
 
@@ -27,6 +28,7 @@ build:
 		cp $$dir/SKILL.md dist/$$name/; \
 		[ -d $$dir/references ] && cp -r $$dir/references dist/$$name/ || true; \
 		[ -d $$dir/agents ] && cp -r $$dir/agents dist/$$name/ || true; \
+		[ -d $$dir/assets ] && cp -r $$dir/assets dist/$$name/ || true; \
 	done
 	@echo "Built to dist/"
 
