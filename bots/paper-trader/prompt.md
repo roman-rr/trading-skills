@@ -23,14 +23,14 @@ Steps (on Windows, use the PowerShell form given after a step):
    works wherever a later step says `py -3` or `python`.
 2. `mkdir -p signals-paper-trader && cd signals-paper-trader`
    Windows: `mkdir -Force signals-paper-trader | Out-Null; cd signals-paper-trader`
-3. Download the bot to a file (never pipe it into Python):
-   `curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/paper-trader-v1.0.1/bots/paper-trader/paper_trader.py`
+3. Download the bot (version 1.0.2, pinned to its commit) to a file (never pipe it into Python):
+   `curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/9a48ad8760bd3996e6f435de97db42301c69bf63/bots/paper-trader/paper_trader.py`
    Windows: the same command with `curl.exe` instead of `curl` (in Windows
    PowerShell, plain `curl` is a different command).
 4. Verify it before running anything:
    `python3 -c "import hashlib;print(hashlib.sha256(open('paper_trader.py','rb').read()).hexdigest())"`
    Windows: `(Get-FileHash paper_trader.py -Algorithm SHA256).Hash.ToLower()`
-   It must print `36269398fe14cb96841e747321bb59372bc7ebe690784fd53ff7af8b417d7e30`. If it doesn't, delete the file, tell me, and stop.
+   It must print `0721eaa3a2a97c944b929084a04403ebc9e118ee7d4c6abcb8dffbd0977da5c4`. If it doesn't, delete the file, tell me, and stop.
 5. If `SIGNALS_API_KEY` is not set, stop and ask me to set it (the key is at
    https://signals.x70.ai/dashboard/mcp-key) with
    `export SIGNALS_API_KEY=<my key>` (Windows: `$env:SIGNALS_API_KEY = "<my key>"`)

@@ -42,7 +42,7 @@ checksum, checks your key and starts it in the background.
 
 ```bash
 mkdir signals-paper-trader && cd signals-paper-trader
-curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/paper-trader-v1.0.1/bots/paper-trader/paper_trader.py
+curl -fsSLo paper_trader.py https://raw.githubusercontent.com/roman-rr/trading-skills/9a48ad8760bd3996e6f435de97db42301c69bf63/bots/paper-trader/paper_trader.py
 python3 paper_trader.py --selftest          # checks the key and the API
 nohup python3 paper_trader.py >> paper_trader.log 2>&1 &
 python3 paper_trader.py --report            # results so far, any time
